@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  servicenow-app:
+    build: .
+    ports:
+      - "8506:8506"
+    environment:
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-servicenow_docs}
+      - DB_USER=${DB_USER:-servicenow_user}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SCRAPER_TIMEOUT=${SCRAPER_TIMEOUT:-60}
+      - SCRAPER_USE_SELENIUM=${SCRAPER_USE_SELENIUM:-false}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8506/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=${DB_NAME:-servicenow_docs}
+      - POSTGRES_USER=${DB_USER:-servicenow_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-servicenow_user} -d ${DB_NAME:-servicenow_docs}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

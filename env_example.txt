@@ -1,0 +1,67 @@
+# ServiceNow Advanced Visual Documentation Environment Configuration
+# Copy this file to .env and update the values according to your setup
+
+# Database Configuration
+DB_TYPE=postgresql
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=servicenow_docs
+DB_USER=postgres
+DB_PASSWORD=password
+
+# Alternative MySQL Configuration
+# DB_TYPE=mysql
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_NAME=servicenow_docs
+# DB_USER=root
+# DB_PASSWORD=password
+
+# Web Scraper Configuration
+SCRAPER_BASE_URL=https://www.servicenow.com/docs
+SCRAPER_MAX_PAGES=100
+SCRAPER_DELAY=1
+SCRAPER_USE_SELENIUM=false
+SCRAPER_TIMEOUT=30
+
+# ServiceNow Instance Configuration (Optional)
+SN_INSTANCE_URL=https://your-instance.service-now.com
+SN_USERNAME=your_username
+SN_PASSWORD=your_password
+SN_API_VERSION=v2
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FILE=logs/servicenow_docs.log
+
+# Security Configuration
+ENABLE_SSL=true
+API_KEY_REQUIRED=false
+RATE_LIMIT_ENABLED=true
+MAX_REQUESTS_PER_MINUTE=60
+
+# Automation Configuration
+AUTO_SCRAPE_ENABLED=false
+SCRAPE_SCHEDULE=daily
+SCRAPE_TIME=02:00
+DATA_RETENTION_DAYS=30
+AUTO_CLEANUP_ENABLED=true
+
+# Visualization Configuration
+DEFAULT_LAYOUT=spring
+NODE_SIZE_MULTIPLIER=2.0
+EDGE_WIDTH=2.0
+COLOR_SCHEME=default
+ANIMATION_DURATION=1000
+MAX_NODES_DISPLAY=100
+ENABLE_INTERACTIONS=true
+
+# Redis Configuration (for caching and task queue)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+
+# Celery Configuration (for background tasks)
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
