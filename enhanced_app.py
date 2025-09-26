@@ -26,6 +26,7 @@ from comprehensive_scraper_ui import ComprehensiveScraperUI
 from interactive_visualizer import InteractiveServiceNowVisualizer
 from database_introspection_ui import DatabaseIntrospectionUI
 from servicenow_instance_introspection_ui import ServiceNowInstanceIntrospectionUI
+from servicenow_hybrid_introspection_ui import ServiceNowHybridIntrospectionUI
 from configuration_ui import show_configuration_ui
 
 # Page configuration
@@ -1022,6 +1023,13 @@ def show_servicenow_instance():
     # Show footer
     show_footer()
 
+def show_hybrid_introspection():
+    """Show hybrid introspection interface"""
+    hybrid_introspection_ui = ServiceNowHybridIntrospectionUI()
+    hybrid_introspection_ui.show_hybrid_introspection_interface()
+    # Show footer
+    show_footer()
+
 def main():
     """Main application function"""
     
@@ -1034,7 +1042,7 @@ def main():
         st.markdown("## 🎛️ Navigation")
         
         # Main navigation
-        navigation_options = ["🏠 Dashboard", "🕷️ Comprehensive Scraper", "🗄️ Database", "📈 Visualizations", "🔍 Database Introspection", "🌐 ServiceNow Instance", "🔧 Configuration"]
+        navigation_options = ["🏠 Dashboard", "🕷️ Comprehensive Scraper", "🗄️ Database", "📈 Visualizations", "🔍 Database Introspection", "🌐 ServiceNow Instance", "🔗 Hybrid Introspection", "🔧 Configuration"]
         
         # Map current page to navigation option
         page_mapping = {
@@ -1044,6 +1052,7 @@ def main():
             "visualizations": "📈 Visualizations",
             "introspection": "🔍 Database Introspection",
             "servicenow_instance": "🌐 ServiceNow Instance",
+            "hybrid_introspection": "🔗 Hybrid Introspection",
             "configuration": "🔧 Configuration"
         }
         
@@ -1070,6 +1079,8 @@ def main():
             st.session_state.current_page = "introspection"
         elif page == "🌐 ServiceNow Instance":
             st.session_state.current_page = "servicenow_instance"
+        elif page == "🔗 Hybrid Introspection":
+            st.session_state.current_page = "hybrid_introspection"
         elif page == "🔧 Configuration":
             st.session_state.current_page = "configuration"
         
@@ -1114,6 +1125,8 @@ def main():
         show_introspection()
     elif st.session_state.current_page == "servicenow_instance":
         show_servicenow_instance()
+    elif st.session_state.current_page == "hybrid_introspection":
+        show_hybrid_introspection()
     elif st.session_state.current_page == "configuration":
         show_configuration_ui()
 

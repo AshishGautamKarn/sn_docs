@@ -196,7 +196,7 @@ class ServiceNowDatabaseValidator:
                 elif parsed.scheme.startswith('mysql'):
                     validation_result['db_type'] = 'mysql'
                 elif parsed.scheme.startswith('mssql'):
-                    validation_result['db_type'] 'mssql'
+                    validation_result['db_type'] = 'mssql'
                 elif parsed.scheme.startswith('oracle'):
                     validation_result['db_type'] = 'oracle'
                 else:
