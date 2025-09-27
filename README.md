@@ -174,7 +174,7 @@ nano .env
 streamlit run enhanced_app.py
 ```
 
-**🎉 Access your application at: http://localhost:8501**
+**🎉 Access your application at: https://localhost:8501**
 
 ---
 
