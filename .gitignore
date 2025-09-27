@@ -380,3 +380,78 @@ certs/
 
 # ServiceNow Documentation Project - Additional Exclusions
 # Keep only essential files for GitHub deployment
+
+# Additional Security Patterns
+*.secret
+*.private
+*_secret.*
+*_private.*
+*_key.*
+*_password.*
+*_credential.*
+*_token.*
+
+# Database connection strings with credentials
+*_db_connection.*
+*_database_url.*
+
+# Local development overrides
+local_*
+*_local.*
+dev_*
+*_dev.*
+
+# Production secrets
+prod_*
+*_prod.*
+production_*
+*_production.*
+
+# User-specific configurations
+user_*
+*_user.*
+personal_*
+*_personal.*
+
+# Backup files that might contain sensitive data
+*.backup
+*.bak
+*.old
+*.orig
+*.rej
+*_backup.*
+*_bak.*
+
+# Temporary files that might contain sensitive data
+*.tmp
+*.temp
+*_tmp.*
+*_temp.*
+
+# Log files that might contain sensitive information
+*.log
+*.log.*
+*_log.*
+access.log
+error.log
+debug.log
+app.log
+
+# Configuration files that might contain sensitive data
+config.local.*
+config.production.*
+config.development.*
+config.staging.*
+secrets.*
+credentials.*
+auth.*
+*_auth.*
+
+# Environment-specific files
+.env.local
+.env.production
+.env.development
+.env.staging
+.env.test
+.env.prod
+.env.dev

@@ -150,7 +150,26 @@ class DatabaseIntrospectionUI:
                 self._start_introspection(db_type, host, port, database, username, password, timeout, max_connections)
         
         with col3:
-            if st.button("💾 Save to Database", use_container_width=True):
+            # Check if we have introspection results to provide context
+            if hasattr(self, 'introspection_results') and self.introspection_results:
+                instance_info = self.introspection_results.get('instance_info', {})
+                is_app_database = instance_info.get('is_app_database', False)
+                is_servicenow_instance = instance_info.get('is_servicenow_instance', False)
+                
+                if is_app_database and not is_servicenow_instance:
+                    button_text = "💾 Save App Data"
+                    button_help = "Save application database data (may create duplicates)"
+                elif is_servicenow_instance:
+                    button_text = "💾 Save SN Data"
+                    button_help = "Save ServiceNow instance data"
+                else:
+                    button_text = "💾 Save to Database"
+                    button_help = "Save introspection results to database"
+            else:
+                button_text = "💾 Save to Database"
+                button_help = "Save introspection results to database"
+            
+            if st.button(button_text, use_container_width=True, help=button_help):
                 self._save_introspection_results()
     
     def _test_connection(self, db_type: str, host: str, port: int, database: str, username: str, password: str, timeout: int):
@@ -246,6 +265,33 @@ class DatabaseIntrospectionUI:
             progress_bar.progress(0.1)
             tables = self.introspector.introspect_tables()
             
+            # Check if this looks like a ServiceNow instance database or application database
+            table_names = [table['name'] for table in tables]
+            is_servicenow_instance = any(name.startswith(('sys_', 'incident', 'change_', 'problem', 'task', 'sc_', 'cmdb_')) for name in table_names)
+            is_app_database = any(name.startswith(('servicenow_', 'database_')) for name in table_names)
+            
+            # Provide appropriate messaging
+            if is_app_database and not is_servicenow_instance:
+                st.warning("⚠️ **Application Database Detected**")
+                st.info("""
+                You're connected to the **ServiceNow Documentation Application's database**, not a ServiceNow instance database.
+                
+                **What you're seeing:**
+                - Application configuration tables
+                - Documentation storage tables
+                - Not actual ServiceNow instance data
+                
+                **To introspect actual ServiceNow data, you need to connect to:**
+                - The ServiceNow instance's PostgreSQL database
+                - Tables should include: `incident`, `change_request`, `sys_user`, `cmdb_ci`, etc.
+                """)
+            elif is_servicenow_instance:
+                st.success("✅ **ServiceNow Instance Database Detected**")
+                st.info("Found ServiceNow instance tables. Proceeding with introspection...")
+            else:
+                st.info("ℹ️ **Unknown Database Type**")
+                st.info("This doesn't appear to be a ServiceNow instance or application database.")
+            
             # Introspect each table
             status_text.text("📊 Analyzing table structures...")
             progress_bar.progress(0.3)
@@ -257,7 +303,10 @@ class DatabaseIntrospectionUI:
                     'port': port,
                     'database': database,
                     'username': username,
-                    'introspected_at': datetime.now().isoformat()
+                    'introspected_at': datetime.now().isoformat(),
+                    'is_servicenow_instance': is_servicenow_instance,
+                    'is_app_database': is_app_database,
+                    'table_count': len(tables)
                 },
                 'tables': [],
                 'modules': [],
@@ -306,7 +355,16 @@ class DatabaseIntrospectionUI:
             progress_bar.progress(1.0)
             status_text.text("✅ Introspection completed!")
             
-            st.success(f"🎉 Successfully introspected {len(tables)} tables!")
+            # Provide context-aware success message
+            if is_app_database and not is_servicenow_instance:
+                st.success(f"🎉 Successfully introspected {len(tables)} application tables!")
+                st.info("💡 **Note**: These are the documentation application's tables, not ServiceNow instance data.")
+            elif is_servicenow_instance:
+                st.success(f"🎉 Successfully introspected {len(tables)} ServiceNow instance tables!")
+                st.info("✅ **ServiceNow Data**: Found actual ServiceNow instance tables.")
+            else:
+                st.success(f"🎉 Successfully introspected {len(tables)} tables!")
+                st.info("ℹ️ **Database**: Unknown database type.")
             
         except Exception as e:
             st.error(f"❌ Introspection failed: {e}")
@@ -440,8 +498,46 @@ class DatabaseIntrospectionUI:
         
         # Instance info
         instance_info = self.introspection_results['instance_info']
-        st.markdown(f"**Instance**: {instance_info['db_type']} - {instance_info['database']} @ {instance_info['host']}")
+        st.markdown(f"**Database**: {instance_info['db_type']} - {instance_info['database']} @ {instance_info['host']}")
         st.markdown(f"**Introspected**: {instance_info['introspected_at']}")
+        
+        # Database type indicator
+        if instance_info.get('is_servicenow_instance'):
+            st.success("✅ **ServiceNow Instance Database** - Contains actual ServiceNow data")
+        elif instance_info.get('is_app_database'):
+            st.warning("⚠️ **Application Database** - Contains documentation application tables only")
+            
+            # Show helpful information for application database
+            with st.expander("💡 How to connect to actual ServiceNow data"):
+                st.markdown("""
+                **You're currently connected to the documentation application's database.**
+                
+                **To introspect actual ServiceNow instance data, you need to:**
+                
+                1. **Find the ServiceNow instance database:**
+                   - Look for databases with names like: `servicenow`, `sn_prod`, `instance_name`
+                   - Or ask your ServiceNow administrator for the database name
+                
+                2. **Connect to the correct database:**
+                   - Use the same host and credentials
+                   - Change the database name to the ServiceNow instance database
+                
+                3. **Expected ServiceNow tables include:**
+                   - `incident` - Incident management
+                   - `change_request` - Change management  
+                   - `problem` - Problem management
+                   - `sys_user` - User management
+                   - `cmdb_ci` - Configuration items
+                   - `sc_request` - Service catalog requests
+                   - And hundreds more...
+                
+                4. **Alternative: Use REST API introspection:**
+                   - Go to "ServiceNow Instance Introspection" page
+                   - Connect directly to ServiceNow instance via REST API
+                   - This doesn't require database access
+                """)
+        else:
+            st.info("ℹ️ **Unknown Database Type**")
         
         # Summary metrics
         col1, col2, col3, col4, col5 = st.columns(5)
@@ -594,6 +690,53 @@ class DatabaseIntrospectionUI:
             st.error("No introspection results to save.")
             return
         
+        # Get database type information from introspection results
+        instance_info = self.introspection_results.get('instance_info', {})
+        is_servicenow_instance = instance_info.get('is_servicenow_instance', False)
+        is_app_database = instance_info.get('is_app_database', False)
+        table_count = instance_info.get('table_count', 0)
+        
+        # Provide context-aware messaging before saving
+        if is_app_database and not is_servicenow_instance:
+            st.warning("⚠️ **Saving Application Database Data**")
+            st.info("""
+            You're about to save data from the **ServiceNow Documentation Application's database**.
+            
+            **What will be saved:**
+            - Application configuration tables (10 tables)
+            - Documentation storage tables
+            - Not actual ServiceNow instance data
+            
+            **Note**: This data is already stored in the application's database, so saving it again may create duplicates.
+            """)
+            
+            # Ask for confirmation
+            confirmed = st.checkbox("I understand this is application data, not ServiceNow instance data")
+            if not confirmed:
+                st.warning("❌ Save cancelled. Please check the confirmation box to proceed.")
+                return
+                
+        elif is_servicenow_instance:
+            st.success("✅ **Saving ServiceNow Instance Data**")
+            st.info(f"""
+            You're about to save data from a **ServiceNow instance database**.
+            
+            **What will be saved:**
+            - ServiceNow instance tables ({table_count} tables)
+            - Actual ServiceNow data (incidents, changes, users, etc.)
+            - Real ServiceNow configuration and metadata
+            """)
+            
+        else:
+            st.info("ℹ️ **Saving Unknown Database Data**")
+            st.info(f"""
+            You're about to save data from an unknown database type.
+            
+            **What will be saved:**
+            - Database tables ({table_count} tables)
+            - Table structures and metadata
+            """)
+        
         try:
             progress_bar = st.progress(0)
             status_text = st.empty()
@@ -602,40 +745,68 @@ class DatabaseIntrospectionUI:
             status_text.text("💾 Saving modules...")
             progress_bar.progress(0.2)
             
+            modules_saved = 0
             for module_data in self.introspection_results['modules']:
                 self.db_manager.save_module(module_data)
+                modules_saved += 1
             
             # Save roles
             status_text.text("💾 Saving roles...")
             progress_bar.progress(0.4)
             
+            roles_saved = 0
             for role_data in self.introspection_results['roles']:
                 # Find or create module for role
                 module = self.db_manager.save_module({'name': 'Introspected Module', 'label': 'Introspected Module'})
                 self.db_manager.save_role(role_data, module.id)
+                roles_saved += 1
             
             # Save properties
             status_text.text("💾 Saving properties...")
             progress_bar.progress(0.6)
             
+            properties_saved = 0
             for property_data in self.introspection_results['properties']:
                 # Find or create module for property
                 module = self.db_manager.save_module({'name': 'Introspected Module', 'label': 'Introspected Module'})
                 self.db_manager.save_property(property_data, module.id)
+                properties_saved += 1
             
             # Save scheduled jobs
             status_text.text("💾 Saving scheduled jobs...")
             progress_bar.progress(0.8)
             
+            jobs_saved = 0
             for job_data in self.introspection_results['scheduled_jobs']:
                 # Find or create module for job
                 module = self.db_manager.save_module({'name': 'Introspected Module', 'label': 'Introspected Module'})
                 self.db_manager.save_scheduled_job(job_data, module.id)
+                jobs_saved += 1
             
             progress_bar.progress(1.0)
             status_text.text("✅ All data saved successfully!")
             
-            st.success("🎉 Introspection results saved to database!")
+            # Provide context-aware success message
+            if is_app_database and not is_servicenow_instance:
+                st.success("🎉 Application database data saved to documentation system!")
+                st.info("💡 **Note**: This data was already in the application database. Consider connecting to actual ServiceNow instance data for more meaningful results.")
+            elif is_servicenow_instance:
+                st.success("🎉 ServiceNow instance data saved successfully!")
+                st.info("✅ **ServiceNow Data**: Real ServiceNow instance data has been saved to the documentation system.")
+            else:
+                st.success("🎉 Database data saved successfully!")
+                st.info("ℹ️ **Unknown Database**: Data has been saved to the documentation system.")
+            
+            # Show summary of what was saved
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("📦 Modules", modules_saved)
+            with col2:
+                st.metric("👥 Roles", roles_saved)
+            with col3:
+                st.metric("⚙️ Properties", properties_saved)
+            with col4:
+                st.metric("⏰ Jobs", jobs_saved)
             
         except Exception as e:
             st.error(f"❌ Error saving results: {e}")

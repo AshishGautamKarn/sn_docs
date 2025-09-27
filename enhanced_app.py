@@ -131,6 +131,17 @@ def show_dashboard():
     # Initialize database manager
     db_manager = DatabaseManager()
     
+    # Database tables should already be initialized by start_app.sh
+    # Just verify connection and set session state
+    try:
+        if db_manager.test_connection():
+            st.session_state.database_initialized = True
+        else:
+            st.session_state.database_initialized = False
+    except Exception as e:
+        st.warning(f"⚠️ Database connection issue: {e}")
+        st.session_state.database_initialized = False
+    
     # Get comprehensive database statistics and analytics
     try:
         session = db_manager.get_session()

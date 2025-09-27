@@ -824,7 +824,7 @@ CREATE INDEX IF NOT EXISTS idx_database_introspection_database_name ON database_
 
 -- Insert default configuration if it doesn't exist
 INSERT INTO database_configurations (name, db_type, host, port, database_name, username, password, is_active)
-SELECT 'default', 'postgresql', 'localhost', 5432, 'sn_docs', 'servicenow_user', 'servicenow123', true
+SELECT 'default', 'postgresql', 'localhost', 5432, 'sn_docs', 'servicenow_user', 'your_password_here', true
 WHERE NOT EXISTS (SELECT 1 FROM database_configurations WHERE name = 'default');
 EOF
 

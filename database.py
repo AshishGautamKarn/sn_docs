@@ -1198,15 +1198,28 @@ class DatabaseIntrospector:
         """Introspect database tables"""
         session = self.SessionLocal()
         try:
+            from sqlalchemy import text
+            
             if self.db_type == 'postgresql':
+                # First, get all available schemas
+                schema_query = """
+                SELECT schema_name 
+                FROM information_schema.schemata 
+                WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+                ORDER BY schema_name
+                """
+                schema_result = session.execute(text(schema_query))
+                available_schemas = [row[0] for row in schema_result.fetchall()]
+                
+                # Then get tables from all schemas
                 query = """
                 SELECT 
                     table_name,
                     table_type,
                     table_schema
                 FROM information_schema.tables 
-                WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
-                ORDER BY table_name
+                WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+                ORDER BY table_schema, table_name
                 """
             else:  # MySQL
                 query = """
@@ -1216,10 +1229,9 @@ class DatabaseIntrospector:
                     table_schema
                 FROM information_schema.tables 
                 WHERE table_schema NOT IN ('information_schema', 'performance_schema', 'mysql', 'sys')
-                ORDER BY table_name
+                ORDER BY table_schema, table_name
                 """
-            
-            from sqlalchemy import text
+                available_schemas = ['public']  # Default for MySQL
             result = session.execute(text(query))
             tables = []
             
@@ -1229,6 +1241,15 @@ class DatabaseIntrospector:
                     'type': row[1],
                     'schema': row[2]
                 })
+            
+            # Log schema information for debugging
+            if self.db_type == 'postgresql':
+                self.logger.info(f"Available schemas: {available_schemas}")
+                schema_counts = {}
+                for table in tables:
+                    schema = table['schema']
+                    schema_counts[schema] = schema_counts.get(schema, 0) + 1
+                self.logger.info(f"Tables per schema: {schema_counts}")
             
             return tables
             

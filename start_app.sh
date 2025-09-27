@@ -515,6 +515,95 @@ install_dependencies() {
     fi
 }
 
+# Function to initialize database tables
+initialize_database_tables() {
+    print_step "🗄️ Initializing Database Schema"
+    echo ""
+    
+    if [ "$DB_TYPE" = "sqlite" ]; then
+        print_status "SQLite database - tables will be created automatically"
+        return 0
+    fi
+    
+    print_status "📋 Database Schema Initialization Workflow:"
+    print_status "   1. 🔍 Verifying current database schema..."
+    print_status "   2. 🛠️ Creating missing tables if needed..."
+    print_status "   3. ✅ Verifying final schema integrity..."
+    echo ""
+    
+    # Set environment variables for the Python scripts
+    export DB_TYPE="$DB_TYPE"
+    export DB_HOST="$DB_HOST"
+    export DB_PORT="$DB_PORT"
+    export DB_NAME="$DB_NAME"
+    export DB_USER="$DB_USER"
+    export DB_PASSWORD="$DB_PASSWORD"
+    
+    # Step 1: Verify current schema
+    print_status "🔍 Step 1: Verifying current database schema..."
+    if python3 verify_database_schema.py >/dev/null 2>&1; then
+        print_success "✅ Database schema is already complete!"
+        print_status "   All required tables exist with correct structure"
+        return 0
+    else
+        print_warning "⚠️ Database schema needs initialization"
+        print_status "   Some tables are missing or have incorrect structure"
+    fi
+    
+    # Step 2: Initialize tables
+    print_status "🛠️ Step 2: Creating missing database tables..."
+    if python3 initialize_tables.py >/dev/null 2>&1; then
+        print_success "✅ Database tables created successfully!"
+    else
+        print_error "❌ Failed to create tables using initialization script"
+        print_status "🔄 Attempting fallback table creation..."
+        
+        # Fallback: try to create tables using the database module
+        if python3 -c "
+import os
+os.environ['DB_TYPE'] = '$DB_TYPE'
+os.environ['DB_HOST'] = '$DB_HOST'
+os.environ['DB_PORT'] = '$DB_PORT'
+os.environ['DB_NAME'] = '$DB_NAME'
+os.environ['DB_USER'] = '$DB_USER'
+os.environ['DB_PASSWORD'] = '$DB_PASSWORD'
+from database import initialize_database
+db = initialize_database()
+print('✅ Fallback table creation successful!')
+" 2>/dev/null; then
+            print_success "✅ Fallback table creation successful!"
+        else
+            print_error "❌ All table creation methods failed!"
+            print_status "Please check database permissions and try again"
+            print_status "Required permissions: CREATE TABLE, CREATE INDEX, INSERT, SELECT"
+            return 1
+        fi
+    fi
+    
+    # Step 3: Verify final schema
+    print_status "✅ Step 3: Verifying final schema integrity..."
+    if python3 verify_database_schema.py >/dev/null 2>&1; then
+        print_success "🎉 Database schema initialization completed successfully!"
+        print_status "   All required tables are now available"
+        echo ""
+        print_status "📊 Database Schema Summary:"
+        print_status "   • servicenow_modules - ServiceNow application modules"
+        print_status "   • servicenow_roles - User roles and permissions"
+        print_status "   • servicenow_tables - Database table definitions"
+        print_status "   • servicenow_properties - System properties"
+        print_status "   • servicenow_scheduled_jobs - Automated jobs"
+        print_status "   • database_configurations - Database settings"
+        print_status "   • servicenow_configurations - ServiceNow settings"
+        print_status "   • database_connections - Connection configs"
+        print_status "   • database_introspections - Introspection results"
+        return 0
+    else
+        print_error "❌ Schema verification failed after initialization!"
+        print_status "Some tables may not have been created correctly"
+        return 1
+    fi
+}
+
 # Function to setup security
 setup_security() {
     print_step "Setting up security configurations..."
@@ -709,6 +798,9 @@ main() {
     else
         print_status "Skipping database verification"
     fi
+    
+    # Initialize database tables IMMEDIATELY after connection verification
+    initialize_database_tables
     
     # Create environment file
     create_env_file
