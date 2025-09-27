@@ -142,8 +142,8 @@
 
 ### **1. Clone Repository**
 ```bash
-git clone https://github.com/yourusername/servicenow-docs.git
-cd servicenow-docs
+git clone [https://github.com/yourusername/servicenow-docs.git](https://github.com/AshishGautamKarn/sn_docs/)
+cd sn-docs
 ```
 
 ### **2. Automated Setup**
@@ -209,8 +209,8 @@ streamlit run enhanced_app.py
 #### **Using Docker Compose**
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/servicenow-docs.git
-cd servicenow-docs
+git clone https://github.com/AshishGautamKarn/sn_docs/
+cd sn-docs
 
 # Create environment file
 cp .env.example .env
@@ -223,10 +223,10 @@ docker-compose up -d
 #### **Using Docker**
 ```bash
 # Build image
-docker build -t servicenow-docs .
+docker build -t sn-docs .
 
 # Run container
-docker run -p 8501:8501 --env-file .env servicenow-docs
+docker run -p 8501:8501 --env-file .env sn-docs
 ```
 
 ### **Option 3: SSL/HTTPS Installation**
@@ -459,8 +459,8 @@ class ServiceNowRole:
 #### **Local Development**
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/servicenow-docs.git
-cd servicenow-docs
+git clone [https://github.com/yourusername/servicenow-docs.git](https://github.com/AshishGautamKarn/sn_docs/)
+cd sn-docs
 
 # Create development environment
 python -m venv venv
@@ -639,31 +639,18 @@ sudo nano /etc/nginx/sites-available/servicenow-docs
 ### **Support the Project**
 If you find this project helpful, please consider supporting it:
 
+- **☕️ Buy me a coffee**: Show your appreciation on https://buymeacoffee.com/ashishgautamkarn
 - **⭐ Star the Repository**: Show your appreciation
 - **🐛 Report Issues**: Help improve the project
 - **💡 Suggest Features**: Share your ideas
 - **📖 Improve Documentation**: Help others learn
 - **🤝 Contribute Code**: Add new features
 
-### **Professional Services**
-- **ServiceNow Consulting**: Implementation and optimization
-- **Python Development**: Custom applications and automation
-- **Data Analytics**: Business intelligence and reporting
-- **Technical Writing**: Documentation and training materials
-
 ---
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### **MIT License Summary**
-- ✅ Commercial use
-- ✅ Modification
-- ✅ Distribution
-- ✅ Private use
-- ❌ No liability
-- ❌ No warranty
 
 ---
 
@@ -675,14 +662,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/ashishgautamkarn/)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-black?style=for-the-badge&logo=github)](https://github.com/ashishgautamkarn)
-[![Email](https://img.shields.io/badge/Email-Contact-red?style=for-the-badge&logo=gmail)](mailto:your-email@example.com)
 
 </div>
 
 ### **About the Creator**
 - **Name**: Ashish Gautam
 - **LinkedIn**: [https://www.linkedin.com/in/ashishgautamkarn/](https://www.linkedin.com/in/ashishgautamkarn/)
-- **Expertise**: ServiceNow, Python, Data Analytics, Full-Stack Development
+- **Expertise**: ServiceNow, Python, Data Analytics, Database Engineering and Administration
 - **Location**: Available for remote work and consulting
 
 ### **Contact Information**
@@ -690,11 +676,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **GitHub**: [ashishgautamkarn](https://github.com/ashishgautamkarn)
 - **Email**: Available through LinkedIn
 
-### **Professional Services**
-- **ServiceNow Consulting**: Implementation and optimization
-- **Python Development**: Custom applications and automation
-- **Data Analytics**: Business intelligence and reporting
-- **Technical Writing**: Documentation and training materials
 
 ---
 
