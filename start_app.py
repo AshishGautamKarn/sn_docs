@@ -172,7 +172,7 @@ def setup_environment_file():
                 f.write("""# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=servicenow_user
 DB_PASSWORD=
 

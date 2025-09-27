@@ -5,7 +5,7 @@
 DB_TYPE=postgresql
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=postgres
 DB_PASSWORD=password
 
@@ -13,7 +13,7 @@ DB_PASSWORD=password
 # DB_TYPE=mysql
 # DB_HOST=localhost
 # DB_PORT=3306
-# DB_NAME=servicenow_docs
+# DB_NAME=sn_docs
 # DB_USER=root
 # DB_PASSWORD=password
 
@@ -32,7 +32,7 @@ SN_API_VERSION=v2
 
 # Logging Configuration
 LOG_LEVEL=INFO
-LOG_FILE=logs/servicenow_docs.log
+LOG_FILE=logs/sn_docs.log
 
 # Security Configuration
 ENABLE_SSL=true

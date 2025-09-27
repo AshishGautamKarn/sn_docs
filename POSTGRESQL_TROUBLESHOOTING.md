@@ -52,7 +52,7 @@ nc -z localhost 5432
 sudo -u postgres psql
 
 # Test with specific credentials
-psql -h localhost -U servicenow_user -d servicenow_docs
+psql -h localhost -U servicenow_user -d sn_docs
 ```
 
 ## 🛠️ **Common Solutions**
@@ -83,13 +83,13 @@ brew services start postgresql
 sudo -u postgres psql
 
 # Create database
-CREATE DATABASE servicenow_docs;
+CREATE DATABASE sn_docs;
 
 # Create user
 CREATE USER servicenow_user WITH PASSWORD 'YOUR_SECURE_PASSWORD';
 
 # Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;
+GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;
 
 # Exit
 \q
@@ -167,13 +167,13 @@ sudo systemctl start postgresql
 
 ### **If database doesn't exist:**
 ```bash
-sudo -u postgres psql -c "CREATE DATABASE servicenow_docs;"
+sudo -u postgres psql -c "CREATE DATABASE sn_docs;"
 ```
 
 ### **If user doesn't exist:**
 ```bash
 sudo -u postgres psql -c "CREATE USER servicenow_user WITH PASSWORD 'YOUR_SECURE_PASSWORD';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;"
 ```
 
 ### **If you want to use SQLite instead:**
@@ -222,13 +222,13 @@ When you run the enhanced startup script and encounter connection issues:
 
 Troubleshooting suggestions:
   - Verify username and password are correct
-  - Check if the database 'servicenow_docs' exists
-  - Ensure user 'servicenow_user' has access to database 'servicenow_docs'
+  - Check if the database 'sn_docs' exists
+  - Ensure user 'servicenow_user' has access to database 'sn_docs'
   - Check PostgreSQL authentication settings (pg_hba.conf)
 
 Do you want to create the database and user? (y/n) [n]: y
 PostgreSQL superuser (postgres) password: [hidden input]
-[SUCCESS] Database 'servicenow_docs' created successfully!
+[SUCCESS] Database 'sn_docs' created successfully!
 [SUCCESS] User 'servicenow_user' created successfully!
 [SUCCESS] Privileges granted successfully!
 [SUCCESS] PostgreSQL connection successful after setup!

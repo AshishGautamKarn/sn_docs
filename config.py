@@ -22,7 +22,7 @@ class DatabaseConfig:
     db_type: str = "postgresql"
     host: str = "localhost"
     port: int = 5432
-    database_name: str = "servicenow_docs"
+    database_name: str = "sn_docs"
     username: str = "postgres"
     password: str = ""
     connection_pool_size: int = 10
@@ -98,7 +98,7 @@ class LoggingConfig:
     """Logging configuration"""
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    file_path: str = "logs/servicenow_docs.log"
+    file_path: str = "logs/sn_docs.log"
     max_file_size: int = 10485760  # 10MB
     backup_count: int = 5
     console_output: bool = True
@@ -342,7 +342,7 @@ def create_sample_config_file():
             'db_type': 'postgresql',
             'host': 'localhost',
             'port': 5432,
-            'database_name': 'servicenow_docs',
+            'database_name': 'sn_docs',
             'username': 'postgres',
             'password': 'password',
             'connection_pool_size': 10,
@@ -395,7 +395,7 @@ def create_sample_config_file():
         'logging': {
             'level': 'INFO',
             'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            'file_path': 'logs/servicenow_docs.log',
+            'file_path': 'logs/sn_docs.log',
             'max_file_size': 10485760,
             'backup_count': 5,
             'console_output': True
@@ -431,3 +431,5 @@ if __name__ == "__main__":
     
     # Create sample config file
     create_sample_config_file()
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

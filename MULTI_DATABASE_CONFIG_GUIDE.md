@@ -184,7 +184,7 @@ class DatabaseConfiguration(Base):
     db_type = Column(String(50), nullable=False, default='postgresql')
     host = Column(String(255), nullable=False, default='localhost')
     port = Column(Integer, nullable=False, default=5432)
-    database_name = Column(String(255), nullable=False, default='servicenow_docs')
+    database_name = Column(String(255), nullable=False, default='sn_docs')
     username = Column(String(255), nullable=False, default='servicenow_user')
     password = Column(String(500), nullable=False)
     connection_pool_size = Column(Integer, default=10)

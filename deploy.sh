@@ -102,7 +102,7 @@ if docker-compose ps | grep -q "Up"; then
     echo ""
     echo "📱 Application URL: http://localhost:8506"
     echo "🗄️  Database: PostgreSQL on localhost:5432"
-    echo "📊 Database Name: ${DB_NAME:-servicenow_docs}"
+    echo "📊 Database Name: ${DB_NAME:-sn_docs}"
     echo ""
     echo "📝 Useful Commands:"
     echo "  View logs: docker-compose logs -f"

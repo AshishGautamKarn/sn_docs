@@ -50,7 +50,7 @@ def main():
     # Check if we're in the right directory
     if not os.path.exists("app.py"):
         print("❌ Error: app.py not found in current directory")
-        print("   Please run this script from the servicenow_docs directory")
+        print("   Please run this script from the sn_docs directory")
         return 1
     
     # Check requirements

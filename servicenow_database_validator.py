@@ -24,14 +24,14 @@ class ServiceNowDatabaseValidator:
         # Security: Validation patterns
         self.valid_url_patterns = [
             r'^https://[a-zA-Z0-9.-]+\.service-now\.com/?$',
-            r'^https://[a-zA-Z0-9.-]+\.servicenow\.com/?$',
+            r'^https://your-instance.service-now.com',
             r'^https://[a-zA-Z0-9.-]+\.now\.com/?$'
         ]
         
         self.valid_db_patterns = [
-            r'^postgresql://[^:]+:[^@]+@[^:]+:\d+/[^?]+$',
-            r'^mysql://[^:]+:[^@]+@[^:]+:\d+/[^?]+$',
-            r'^mysql\+pymysql://[^:]+:[^@]+@[^:]+:\d+/[^?]+$',
+            r'^postgresql://user:password@host:port/database',
+            r'^mysql://user:password@host:port/database',
+            r'^mysql\+pymysql://user:password@host:port/database',
             r'^mssql://[^:]+:[^@]+@[^:]+:\d+/[^?]+$',
             r'^oracle://[^:]+:[^@]+@[^:]+:\d+/[^?]+$'
         ]
@@ -639,3 +639,5 @@ class ServiceNowDatabaseValidator:
                 'total_warnings': 0,
                 'overall_success': False
             }
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

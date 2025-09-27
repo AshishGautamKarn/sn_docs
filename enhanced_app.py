@@ -3,6 +3,19 @@ ServiceNow Advanced Visual Documentation
 Clean application focused on comprehensive ServiceNow data scraping and visualization
 """
 
+# Suppress warnings before importing other modules
+import warnings
+import os
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
+warnings.filterwarnings("ignore", category=UserWarning, module="cryptography")
+warnings.filterwarnings("ignore", category=FutureWarning, module="pandas")
+warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
+warnings.filterwarnings("ignore", category=UserWarning, module="plotly")
+warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
+
+# Set environment variable to suppress urllib3 warnings
+os.environ['PYTHONWARNINGS'] = 'ignore::urllib3.exceptions.NotOpenSSLWarning'
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -12,7 +25,6 @@ import json
 import time
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
-import os
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -110,7 +122,7 @@ def show_footer():
     """, unsafe_allow_html=True)
 
 def show_dashboard():
-    """Show the main dashboard"""
+    """Show the enhanced modern dashboard with comprehensive analytics and quick actions"""
     st.markdown('<h1 class="main-header">🚀 ServiceNow Advanced Visual Documentation</h1>', unsafe_allow_html=True)
     
     # Show current page status
@@ -119,7 +131,7 @@ def show_dashboard():
     # Initialize database manager
     db_manager = DatabaseManager()
     
-    # Get database statistics
+    # Get comprehensive database statistics and analytics
     try:
         session = db_manager.get_session()
         try:
@@ -127,29 +139,135 @@ def show_dashboard():
             from sqlalchemy import text
             session.execute(text("SELECT 1"))
             
-            # If basic connection works, try to get statistics
+            # If basic connection works, try to get comprehensive statistics
             try:
                 from database import ServiceNowModule, ServiceNowRole, ServiceNowTable, ServiceNowProperty, ServiceNowScheduledJob
                 
+                # Get counts
                 module_count = session.query(ServiceNowModule).count()
                 role_count = session.query(ServiceNowRole).count()
                 table_count = session.query(ServiceNowTable).count()
                 property_count = session.query(ServiceNowProperty).count()
                 job_count = session.query(ServiceNowScheduledJob).count()
                 
-                # Display metrics
+                # Get analytics data
+                active_modules = session.query(ServiceNowModule).filter(ServiceNowModule.is_active == True).count()
+                active_roles = session.query(ServiceNowRole).filter(ServiceNowRole.is_active == True).count()
+                active_tables = session.query(ServiceNowTable).filter(ServiceNowTable.is_active == True).count()
+                active_properties = session.query(ServiceNowProperty).filter(ServiceNowProperty.is_active == True).count()
+                active_jobs = session.query(ServiceNowScheduledJob).filter(ServiceNowScheduledJob.active == True).count()
+                
+                # Calculate percentages
+                module_active_pct = (active_modules / module_count * 100) if module_count > 0 else 0
+                role_active_pct = (active_roles / role_count * 100) if role_count > 0 else 0
+                table_active_pct = (active_tables / table_count * 100) if table_count > 0 else 0
+                property_active_pct = (active_properties / property_count * 100) if property_count > 0 else 0
+                job_active_pct = (active_jobs / job_count * 100) if job_count > 0 else 0
+                
+                # Display enhanced metrics with analytics
+                st.markdown('<h2 class="section-header">📊 System Overview</h2>', unsafe_allow_html=True)
+                
                 col1, col2, col3, col4, col5 = st.columns(5)
                 
                 with col1:
-                    st.metric("📦 Modules", module_count)
+                    st.metric(
+                        "📦 Modules", 
+                        module_count, 
+                        delta=f"{active_modules} active ({module_active_pct:.1f}%)",
+                        help="Total ServiceNow modules in the system"
+                    )
                 with col2:
-                    st.metric("👥 Roles", role_count)
+                    st.metric(
+                        "👥 Roles", 
+                        role_count, 
+                        delta=f"{active_roles} active ({role_active_pct:.1f}%)",
+                        help="Total user roles and permissions"
+                    )
                 with col3:
-                    st.metric("📊 Tables", table_count)
+                    st.metric(
+                        "📊 Tables", 
+                        table_count, 
+                        delta=f"{active_tables} active ({table_active_pct:.1f}%)",
+                        help="Total database tables and objects"
+                    )
                 with col4:
-                    st.metric("⚙️ Properties", property_count)
+                    st.metric(
+                        "⚙️ Properties", 
+                        property_count, 
+                        delta=f"{active_properties} active ({property_active_pct:.1f}%)",
+                        help="System properties and configurations"
+                    )
                 with col5:
-                    st.metric("⏰ Scheduled Jobs", job_count)
+                    st.metric(
+                        "⏰ Scheduled Jobs", 
+                        job_count, 
+                        delta=f"{active_jobs} active ({job_active_pct:.1f}%)",
+                        help="Automated jobs and scheduled tasks"
+                    )
+                
+                # System Health Indicators
+                st.markdown('<h3 class="section-header">🏥 System Health</h3>', unsafe_allow_html=True)
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    # Overall system health score
+                    overall_health = (module_active_pct + role_active_pct + table_active_pct + property_active_pct + job_active_pct) / 5
+                    if overall_health >= 80:
+                        health_status = "🟢 Excellent"
+                        health_color = "success"
+                    elif overall_health >= 60:
+                        health_status = "🟡 Good"
+                        health_color = "warning"
+                    else:
+                        health_status = "🔴 Needs Attention"
+                        health_color = "error"
+                    
+                    st.metric("Overall Health", f"{overall_health:.1f}%", help="System health based on active components")
+                    if health_color == "success":
+                        st.success(health_status)
+                    elif health_color == "warning":
+                        st.warning(health_status)
+                    else:
+                        st.error(health_status)
+                
+                with col2:
+                    # Data freshness
+                    try:
+                        latest_update = session.query(ServiceNowModule).order_by(ServiceNowModule.updated_at.desc()).first()
+                        if latest_update and latest_update.updated_at:
+                            days_since_update = (datetime.now() - latest_update.updated_at).days
+                            if days_since_update <= 1:
+                                freshness_status = "🟢 Fresh"
+                                freshness_color = "success"
+                            elif days_since_update <= 7:
+                                freshness_status = "🟡 Recent"
+                                freshness_color = "warning"
+                            else:
+                                freshness_status = "🔴 Stale"
+                                freshness_color = "error"
+                            
+                            st.metric("Data Freshness", f"{days_since_update} days ago", help="Last data update")
+                            if freshness_color == "success":
+                                st.success(freshness_status)
+                            elif freshness_color == "warning":
+                                st.warning(freshness_status)
+                            else:
+                                st.error(freshness_status)
+                        else:
+                            st.info("📅 No update timestamps available")
+                    except Exception:
+                        st.info("📅 Update tracking not available")
+                
+                with col3:
+                    # Database connectivity
+                    try:
+                        session.execute(text("SELECT 1"))
+                        st.metric("Database Status", "🟢 Connected", help="Database connection status")
+                        st.success("✅ Database operational")
+                    except Exception as e:
+                        st.metric("Database Status", "🔴 Disconnected", help="Database connection status")
+                        st.error(f"❌ Database error: {str(e)[:50]}...")
                     
             except Exception as table_error:
                 # Tables don't exist yet
@@ -176,81 +294,174 @@ def show_dashboard():
         st.warning(f"Could not retrieve database statistics: {e}")
         st.info("💡 Go to Database page to configure database connection and create tables.")
     
-    # Quick actions
+    # Enhanced Quick Actions with Modern Design
     st.markdown('<h2 class="section-header">🎯 Quick Actions</h2>', unsafe_allow_html=True)
     st.info("💡 Click any button below to navigate to that section of the application.")
     
+    # Primary Actions Row
+    st.markdown('<h4 class="section-header">🚀 Primary Actions</h4>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🕷️ Run Comprehensive Scraper", use_container_width=True, type="primary"):
+        if st.button("🕷️ Run Comprehensive Scraper", use_container_width=True, type="primary", key="nav_scraper"):
             st.session_state.current_page = "comprehensive_scraper"
             st.rerun()
     
     with col2:
-        if st.button("📊 View Database", use_container_width=True):
+        if st.button("📊 View Database", use_container_width=True, key="nav_database"):
             st.session_state.current_page = "database"
             st.rerun()
     
     with col3:
-        if st.button("📈 Visualizations", use_container_width=True):
+        if st.button("📈 Visualizations", use_container_width=True, key="nav_visualizations"):
             st.session_state.current_page = "visualizations"
             st.rerun()
     
-    # Additional quick actions
-    st.markdown('<h3 class="section-header">🔧 Advanced Tools</h3>', unsafe_allow_html=True)
-    
+    # Analytics & Insights Row
+    st.markdown('<h4 class="section-header">📊 Analytics & Insights</h4>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔍 Database Introspection", use_container_width=True):
+        if st.button("🔍 Database Introspection", use_container_width=True, key="nav_introspection"):
             st.session_state.current_page = "introspection"
             st.rerun()
     
     with col2:
-        if st.button("🌐 ServiceNow Instance", use_container_width=True):
+        if st.button("🌐 ServiceNow Instance", use_container_width=True, key="nav_servicenow"):
             st.session_state.current_page = "servicenow_instance"
             st.rerun()
     
     with col3:
-        if st.button("🏠 Back to Dashboard", use_container_width=True):
+        if st.button("🔗 Hybrid Introspection", use_container_width=True, key="nav_hybrid"):
+            st.session_state.current_page = "hybrid_introspection"
+            st.rerun()
+    
+    # Configuration & Management Row
+    st.markdown('<h4 class="section-header">🔧 Configuration & Management</h4>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("⚙️ Configuration", use_container_width=True, key="nav_configuration"):
+            st.session_state.current_page = "configuration"
+            st.rerun()
+    
+    with col2:
+        if st.button("🏠 Back to Dashboard", use_container_width=True, key="nav_dashboard"):
             st.session_state.current_page = "dashboard"
             st.rerun()
     
-    # Recent activity
-    st.markdown('<h2 class="section-header">📋 Recent Activity</h2>', unsafe_allow_html=True)
+    with col3:
+        if st.button("📋 Export Data", use_container_width=True, key="nav_export"):
+            st.info("💡 Export functionality available in individual sections")
+    
+    # Enhanced Recent Activity with Analytics
+    st.markdown('<h2 class="section-header">📋 Recent Activity & Analytics</h2>', unsafe_allow_html=True)
     
     try:
-        # Get recent items
+        # Get recent items with enhanced data
         recent_roles = db_manager.get_recent_roles(5)
         recent_tables = db_manager.get_recent_tables(5)
         recent_properties = db_manager.get_recent_properties(5)
         
         if recent_roles or recent_tables or recent_properties:
-            col1, col2, col3 = st.columns(3)
+            # Create tabs for different activity types
+            tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "👥 Recent Roles", "📋 Recent Tables", "⚙️ Recent Properties"])
             
-            with col1:
+            with tab1:
+                st.markdown("#### 📊 Activity Overview")
+                
+                # Activity summary metrics
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Recent Roles", len(recent_roles) if recent_roles else 0)
+                with col2:
+                    st.metric("Recent Tables", len(recent_tables) if recent_tables else 0)
+                with col3:
+                    st.metric("Recent Properties", len(recent_properties) if recent_properties else 0)
+                
+                # Activity timeline (simplified)
+                st.markdown("#### 📅 Activity Timeline")
+                st.info("💡 Detailed activity tracking available in individual sections")
+            
+            with tab2:
                 if recent_roles:
-                    st.markdown("**Recent Roles:**")
-                    for role in recent_roles:
-                        st.text(f"• {role['name']} ({role['module']})")
+                    st.markdown("#### 👥 Recent Roles")
+                    for i, role in enumerate(recent_roles, 1):
+                        with st.expander(f"{i}. {role['name']}", expanded=False):
+                            st.write(f"**Module**: {role['module']}")
+                            st.write(f"**Description**: {role.get('description', 'No description available')}")
+                            st.write(f"**Active**: {'✅ Yes' if role.get('is_active', True) else '❌ No'}")
+                else:
+                    st.info("No recent roles found")
             
-            with col2:
+            with tab3:
                 if recent_tables:
-                    st.markdown("**Recent Tables:**")
-                    for table in recent_tables:
-                        st.text(f"• {table['name']} ({table['module']})")
+                    st.markdown("#### 📋 Recent Tables")
+                    for i, table in enumerate(recent_tables, 1):
+                        with st.expander(f"{i}. {table['name']}", expanded=False):
+                            st.write(f"**Module**: {table['module']}")
+                            st.write(f"**Description**: {table.get('description', 'No description available')}")
+                            st.write(f"**Type**: {table.get('table_type', 'Unknown')}")
+                            st.write(f"**Active**: {'✅ Yes' if table.get('is_active', True) else '❌ No'}")
+                else:
+                    st.info("No recent tables found")
             
-            with col3:
+            with tab4:
                 if recent_properties:
-                    st.markdown("**Recent Properties:**")
-                    for prop in recent_properties:
-                        st.text(f"• {prop['name']} ({prop['module']})")
+                    st.markdown("#### ⚙️ Recent Properties")
+                    for i, prop in enumerate(recent_properties, 1):
+                        with st.expander(f"{i}. {prop['name']}", expanded=False):
+                            st.write(f"**Module**: {prop['module']}")
+                            st.write(f"**Type**: {prop.get('property_type', 'Unknown')}")
+                            st.write(f"**Current Value**: {prop.get('current_value', 'Not set')}")
+                            st.write(f"**Active**: {'✅ Yes' if prop.get('is_active', True) else '❌ No'}")
+                else:
+                    st.info("No recent properties found")
         else:
             st.info("No recent activity found. Run the comprehensive scraper to populate the database.")
             
     except Exception as e:
         st.warning(f"Could not retrieve recent activity: {e}")
+    
+    # System Status Footer
+    st.markdown("---")
+    st.markdown('<h4 class="section-header">🔍 System Status</h4>', unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        try:
+            session = db_manager.get_session()
+            session.execute(text("SELECT 1"))
+            st.success("✅ Database Connected")
+            session.close()
+        except:
+            st.error("❌ Database Disconnected")
+    
+    with col2:
+        try:
+            from centralized_db_config import get_centralized_db_config
+            centralized_config = get_centralized_db_config()
+            st.success("✅ Configuration Loaded")
+        except:
+            st.warning("⚠️ Configuration Issues")
+    
+    with col3:
+        try:
+            from database import ServiceNowModule
+            session = db_manager.get_session()
+            count = session.query(ServiceNowModule).count()
+            session.close()
+            if count > 0:
+                st.success("✅ Data Available")
+            else:
+                st.info("ℹ️ No Data")
+        except:
+            st.warning("⚠️ Data Issues")
+    
+    with col4:
+        st.info("🔄 Last Updated: Now")
     
     # Show footer
     show_footer()
@@ -320,7 +531,8 @@ def _load_database_configuration(db_manager: DatabaseManager) -> Dict[str, Any]:
     try:
         db_config = current_db_manager.get_database_configuration('default')
         if db_config:
-            config_dict = db_config.to_dict()
+            # db_config is already a dictionary from centralized config
+            config_dict = db_config.copy()
             config_dict['_source'] = 'saved_config'
             return config_dict
     except Exception as e:
@@ -335,7 +547,7 @@ def _load_database_configuration(db_manager: DatabaseManager) -> Dict[str, Any]:
             'db_type': os.getenv('DB_TYPE', 'postgresql'),
             'host': os.getenv('DB_HOST', 'localhost'),
             'port': int(os.getenv('DB_PORT', '5432')),
-            'database_name': os.getenv('DB_NAME', 'servicenow_docs'),
+            'database_name': os.getenv('DB_NAME', 'sn_docs'),
             'username': os.getenv('DB_USER', 'servicenow_user'),
             'password': os.getenv('DB_PASSWORD', ''),
             'connection_pool_size': int(os.getenv('DB_CONNECTION_POOL_SIZE', '10')),
@@ -352,7 +564,7 @@ def _load_database_configuration(db_manager: DatabaseManager) -> Dict[str, Any]:
         'db_type': 'postgresql',
         'host': 'localhost',
         'port': 5432,
-        'database_name': 'servicenow_docs',
+        'database_name': 'sn_docs',
         'username': 'servicenow_user',
         'password': '',
         'connection_pool_size': 10,
@@ -445,7 +657,7 @@ def show_database_view():
             return {
                 'host': os.getenv('DB_HOST', 'localhost'),
                 'port': int(os.getenv('DB_PORT', '5432')),
-                'database_name': os.getenv('DB_NAME', 'servicenow_docs'),
+                'database_name': os.getenv('DB_NAME', 'sn_docs'),
                 'username': os.getenv('DB_USER', 'servicenow_user'),
                 'db_type': os.getenv('DB_TYPE', 'postgresql'),
                 'password': os.getenv('DB_PASSWORD', ''),
@@ -686,7 +898,7 @@ def show_database_view():
                 db_type = current_db_config.get('db_type', 'postgresql')
                 host = current_db_config.get('host', 'localhost')
                 port = current_db_config.get('port', 5432)
-                database_name = current_db_config.get('database_name', 'servicenow_docs')
+                database_name = current_db_config.get('database_name', 'sn_docs')
                 username = current_db_config.get('username', 'servicenow_user')
                 password = current_db_config.get('password', '')
                 
@@ -854,31 +1066,12 @@ def show_database_view():
                     st.metric("Properties", property_count)
                 with col5:
                     st.metric("Scheduled Jobs", job_count)
-                    
-            except Exception as table_error:
-                # Tables don't exist yet
-                st.info("ℹ️ Database connected but tables not created yet.")
                 
-                # Show empty statistics
-                col1, col2, col3, col4, col5 = st.columns(5)
+                # Data tables (only show if tables exist and have data)
+                st.markdown("### 📊 Data Tables")
                 
-                with col1:
-                    st.metric("Modules", 0)
-                with col2:
-                    st.metric("Roles", 0)
-                with col3:
-                    st.metric("Tables", 0)
-                with col4:
-                    st.metric("Properties", 0)
-                with col5:
-                    st.metric("Scheduled Jobs", 0)
-            
-            # Data tables (only show if tables exist)
-            st.markdown("### 📊 Data Tables")
-            
-            try:
                 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Modules", "Roles", "Tables", "Properties", "Scheduled Jobs"])
-            
+                
                 with tab1:
                     modules = session.query(ServiceNowModule).all()
                     if modules:
@@ -889,8 +1082,11 @@ def show_database_view():
                                 'Label': module.label,
                                 'Description': module.description or '',
                                 'Type': module.module_type or '',
+                                'Version': module.version or '',
+                                'Documentation URL': module.documentation_url or '',
+                                'Active': module.is_active,
                                 'Created': module.created_at.strftime('%Y-%m-%d %H:%M') if module.created_at else '',
-                                'Active': module.is_active
+                                'Updated': module.updated_at.strftime('%Y-%m-%d %H:%M') if module.updated_at else ''
                             })
                         df = pd.DataFrame(module_data)
                         st.dataframe(df, use_container_width=True)
@@ -905,8 +1101,12 @@ def show_database_view():
                             role_data.append({
                                 'Name': role.name,
                                 'Description': role.description or '',
+                                'Module': role.module.name if role.module else '',
+                                'Permissions': role.permissions or '',
+                                'Dependencies': role.dependencies or '',
+                                'Active': role.is_active,
                                 'Created': role.created_at.strftime('%Y-%m-%d %H:%M') if role.created_at else '',
-                                'Active': role.is_active
+                                'Updated': role.updated_at.strftime('%Y-%m-%d %H:%M') if role.updated_at else ''
                             })
                         df = pd.DataFrame(role_data)
                         st.dataframe(df, use_container_width=True)
@@ -923,8 +1123,15 @@ def show_database_view():
                                 'Label': table.label,
                                 'Description': table.description or '',
                                 'Type': table.table_type or '',
+                                'Module': table.module.name if table.module else '',
+                                'Fields': table.fields or '',
+                                'Business Rules': table.business_rules or '',
+                                'Access Controls': table.access_controls or '',
+                                'Scripts': table.scripts or '',
+                                'Relationships': table.relationships or '',
+                                'Active': table.is_active,
                                 'Created': table.created_at.strftime('%Y-%m-%d %H:%M') if table.created_at else '',
-                                'Active': table.is_active
+                                'Updated': table.updated_at.strftime('%Y-%m-%d %H:%M') if table.updated_at else ''
                             })
                         df = pd.DataFrame(table_data)
                         st.dataframe(df, use_container_width=True)
@@ -940,9 +1147,16 @@ def show_database_view():
                                 'Name': prop.name,
                                 'Description': prop.description or '',
                                 'Type': prop.property_type or '',
+                                'Category': prop.category or '',
+                                'Scope': prop.scope or '',
                                 'Current Value': prop.current_value or '',
+                                'Default Value': prop.default_value or '',
+                                'Impact Level': prop.impact_level or '',
+                                'Documentation URL': prop.documentation_url or '',
+                                'Module': prop.module.name if prop.module else '',
+                                'Active': prop.is_active,
                                 'Created': prop.created_at.strftime('%Y-%m-%d %H:%M') if prop.created_at else '',
-                                'Active': prop.is_active
+                                'Updated': prop.updated_at.strftime('%Y-%m-%d %H:%M') if prop.updated_at else ''
                             })
                         df = pd.DataFrame(property_data)
                         st.dataframe(df, use_container_width=True)
@@ -959,8 +1173,11 @@ def show_database_view():
                                 'Description': job.description or '',
                                 'Module': job.module.name if job.module else '',
                                 'Frequency': job.frequency or '',
-                                'Created': job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else '',
-                                'Active': job.is_active
+                                'Script': job.script or '',
+                                'Active': job.active,
+                                'Last Run': job.last_run.strftime('%Y-%m-%d %H:%M') if job.last_run else '',
+                                'Next Run': job.next_run.strftime('%Y-%m-%d %H:%M') if job.next_run else '',
+                                'Created': job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else ''
                             })
                         df = pd.DataFrame(job_data)
                         st.dataframe(df, use_container_width=True)
@@ -984,6 +1201,10 @@ def show_database_view():
                     st.metric("Properties", 0)
                 with col5:
                     st.metric("Scheduled Jobs", 0)
+                
+                # Data tables section for when tables don't exist
+                st.markdown("### 📊 Data Tables")
+                st.info("ℹ️ No ServiceNow data tables found. Please run data collection from the ServiceNow pages to populate the database.")
             
         finally:
             session.close()
@@ -1037,6 +1258,10 @@ def main():
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'dashboard'
     
+    # Initialize navigation state
+    if 'navigation_initialized' not in st.session_state:
+        st.session_state.navigation_initialized = True
+    
     # Sidebar navigation
     with st.sidebar:
         st.markdown("## 🎛️ Navigation")
@@ -1063,26 +1288,28 @@ def main():
         page = st.selectbox(
             "Select Page:",
             navigation_options,
-            index=current_index
+            index=current_index,
+            key="navigation_selectbox"
         )
         
-        # Update session state based on selection
-        if page == "🏠 Dashboard":
-            st.session_state.current_page = "dashboard"
-        elif page == "🕷️ Comprehensive Scraper":
-            st.session_state.current_page = "comprehensive_scraper"
-        elif page == "🗄️ Database":
-            st.session_state.current_page = "database"
-        elif page == "📈 Visualizations":
-            st.session_state.current_page = "visualizations"
-        elif page == "🔍 Database Introspection":
-            st.session_state.current_page = "introspection"
-        elif page == "🌐 ServiceNow Instance":
-            st.session_state.current_page = "servicenow_instance"
-        elif page == "🔗 Hybrid Introspection":
-            st.session_state.current_page = "hybrid_introspection"
-        elif page == "🔧 Configuration":
-            st.session_state.current_page = "configuration"
+        # Create reverse mapping for cleaner code
+        reverse_mapping = {
+            "🏠 Dashboard": "dashboard",
+            "🕷️ Comprehensive Scraper": "comprehensive_scraper",
+            "🗄️ Database": "database",
+            "📈 Visualizations": "visualizations",
+            "🔍 Database Introspection": "introspection",
+            "🌐 ServiceNow Instance": "servicenow_instance",
+            "🔗 Hybrid Introspection": "hybrid_introspection",
+            "🔧 Configuration": "configuration"
+        }
+        
+        # Update session state based on selection (only if changed)
+        new_page = reverse_mapping.get(page)
+        if new_page and new_page != st.session_state.current_page:
+            st.session_state.current_page = new_page
+            # Force immediate navigation
+            st.rerun()
         
         # Database status
         st.markdown("---")
@@ -1132,3 +1359,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

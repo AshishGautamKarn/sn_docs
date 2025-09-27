@@ -16,7 +16,7 @@ mkdir -p $BACKUP_DIR
 
 # Database backup
 echo "📊 Backing up database..."
-pg_dump -h localhost -U servicenow_user servicenow_docs > $BACKUP_DIR/$BACKUP_FILE.sql
+pg_dump -h localhost -U servicenow_user sn_docs > $BACKUP_DIR/$BACKUP_FILE.sql
 
 # Application files backup
 echo "📁 Backing up application files..."
@@ -29,7 +29,7 @@ echo "🔄 Restoring from backup: $BACKUP_FILE"
 
 # Restore database
 echo "📊 Restoring database..."
-psql -h localhost -U servicenow_user -d servicenow_docs < $BACKUP_FILE.sql
+psql -h localhost -U servicenow_user -d sn_docs < $BACKUP_FILE.sql
 
 # Restore application files
 echo "📁 Restoring application files..."

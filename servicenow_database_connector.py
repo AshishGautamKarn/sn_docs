@@ -16,6 +16,7 @@ import requests
 from urllib.parse import urlparse
 import json
 import re
+from centralized_db_config import get_centralized_db_config
 
 
 class ServiceNowDatabaseConnector:
@@ -30,8 +31,23 @@ class ServiceNowDatabaseConnector:
             db_connection_string: Database connection string (from environment or parameter)
         """
         self.logger = self._setup_logger()
-        self.instance_url = instance_url or os.getenv('SN_INSTANCE_URL', '')
-        self.db_connection_string = db_connection_string or os.getenv('SN_DB_CONNECTION_STRING', '')
+        
+        # Use centralized configuration
+        self.centralized_config = get_centralized_db_config()
+        
+        # Get ServiceNow configuration
+        sn_config = self.centralized_config.get_servicenow_configuration('default')
+        if sn_config:
+            self.instance_url = instance_url or sn_config.get('instance_url', '')
+        else:
+            self.instance_url = instance_url or os.getenv('SN_INSTANCE_URL', '')
+        
+        # Get database connection from centralized config
+        if db_connection_string:
+            self.db_connection_string = db_connection_string
+        else:
+            # Use the centralized database connection
+            self.db_connection_string = self.centralized_config.get_database_url()
         
         # Security: Validate inputs
         self._validate_inputs()
@@ -236,7 +252,7 @@ class ServiceNowDatabaseConnector:
                 echo=os.getenv('SN_DB_ECHO', 'false').lower() == 'true',
                 connect_args={
                     'connect_timeout': self.connection_timeout,
-                    'application_name': 'servicenow_docs_connector'
+                    'application_name': 'sn_docs_connector'
                 }
             )
             
@@ -256,12 +272,16 @@ class ServiceNowDatabaseConnector:
     def _establish_api_connection(self):
         """Establish secure REST API connection"""
         try:
-            # Security: Get credentials from environment
-            username = os.getenv('SN_USERNAME', '')
-            password = os.getenv('SN_PASSWORD', '')
+            # Get credentials from centralized configuration
+            rest_api_config = self.centralized_config.get_servicenow_configuration('hybrid_rest_api')
+            if not rest_api_config:
+                raise Exception("REST API configuration not found in centralized config")
+            
+            username = rest_api_config.get('username', '')
+            password = rest_api_config.get('password', '')
             
             if not username or not password:
-                raise Exception("ServiceNow credentials not found in environment variables")
+                raise Exception("ServiceNow credentials not found in centralized configuration")
             
             # Security: Validate credentials format
             if not self._validate_credentials(username, password):
@@ -288,10 +308,12 @@ class ServiceNowDatabaseConnector:
         if len(username) < 3 or len(password) < 3:
             return False
         
-        # Security: Check for common injection patterns
-        dangerous_patterns = ['<', '>', '"', "'", ';', '--', '/*', '*/']
+        # Security: Check for SQL injection patterns in username only
+        # Password can contain special characters for ServiceNow
+        dangerous_patterns = ['--', '/*', '*/', 'union', 'select', 'drop', 'delete', 'insert', 'update']
+        username_lower = username.lower()
         for pattern in dangerous_patterns:
-            if pattern in username or pattern in password:
+            if pattern in username_lower:
                 return False
         
         return True
@@ -649,3 +671,5 @@ except ImportError:
         
         def get_comprehensive_data(self):
             return {}
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

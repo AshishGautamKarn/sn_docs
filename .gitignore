@@ -367,5 +367,16 @@ jspm_packages/
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# SSL Certificates and Keys
+ssl/
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+certificates/
+certs/
+
 # ServiceNow Documentation Project - Additional Exclusions
 # Keep only essential files for GitHub deployment

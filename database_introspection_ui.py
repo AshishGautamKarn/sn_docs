@@ -243,12 +243,12 @@ class DatabaseIntrospectionUI:
             
             # Introspect tables
             status_text.text("🔍 Discovering database tables...")
-            progress_bar.progress(10)
+            progress_bar.progress(0.1)
             tables = self.introspector.introspect_tables()
             
             # Introspect each table
             status_text.text("📊 Analyzing table structures...")
-            progress_bar.progress(30)
+            progress_bar.progress(0.3)
             
             introspection_data = {
                 'instance_info': {
@@ -270,7 +270,7 @@ class DatabaseIntrospectionUI:
             for i, table in enumerate(tables):
                 table_name = table['name']
                 status_text.text(f"🔍 Analyzing table: {table_name}")
-                progress_bar.progress(30 + (i * 40 / len(tables)))
+                progress_bar.progress(0.3 + (i * 0.4 / len(tables)))
                 
                 # Get table columns
                 columns = self.introspector.introspect_table_columns(table_name)
@@ -303,7 +303,7 @@ class DatabaseIntrospectionUI:
             # Store results
             self.introspection_results = introspection_data
             
-            progress_bar.progress(100)
+            progress_bar.progress(1.0)
             status_text.text("✅ Introspection completed!")
             
             st.success(f"🎉 Successfully introspected {len(tables)} tables!")
@@ -600,14 +600,14 @@ class DatabaseIntrospectionUI:
             
             # Save modules
             status_text.text("💾 Saving modules...")
-            progress_bar.progress(20)
+            progress_bar.progress(0.2)
             
             for module_data in self.introspection_results['modules']:
                 self.db_manager.save_module(module_data)
             
             # Save roles
             status_text.text("💾 Saving roles...")
-            progress_bar.progress(40)
+            progress_bar.progress(0.4)
             
             for role_data in self.introspection_results['roles']:
                 # Find or create module for role
@@ -616,7 +616,7 @@ class DatabaseIntrospectionUI:
             
             # Save properties
             status_text.text("💾 Saving properties...")
-            progress_bar.progress(60)
+            progress_bar.progress(0.6)
             
             for property_data in self.introspection_results['properties']:
                 # Find or create module for property
@@ -625,14 +625,14 @@ class DatabaseIntrospectionUI:
             
             # Save scheduled jobs
             status_text.text("💾 Saving scheduled jobs...")
-            progress_bar.progress(80)
+            progress_bar.progress(0.8)
             
             for job_data in self.introspection_results['scheduled_jobs']:
                 # Find or create module for job
                 module = self.db_manager.save_module({'name': 'Introspected Module', 'label': 'Introspected Module'})
                 self.db_manager.save_scheduled_job(job_data, module.id)
             
-            progress_bar.progress(100)
+            progress_bar.progress(1.0)
             status_text.text("✅ All data saved successfully!")
             
             st.success("🎉 Introspection results saved to database!")
@@ -649,3 +649,5 @@ class DatabaseIntrospectionUI:
             <a href="https://www.linkedin.com/in/ashishgautamkarn/" target="_blank" style="color: #007bff; text-decoration: none;">LinkedIn Profile</a>
         </div>
         """, unsafe_allow_html=True)
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

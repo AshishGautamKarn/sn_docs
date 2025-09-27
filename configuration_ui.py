@@ -12,6 +12,7 @@ import secrets
 import string
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from centralized_db_config import get_centralized_db_config
 
 class ConfigurationManager:
     """Manages application configuration with secure credential handling"""
@@ -19,6 +20,7 @@ class ConfigurationManager:
     def __init__(self):
         self.config_file = "config.yaml"
         self.env_file = ".env"
+        self.centralized_config = get_centralized_db_config()
         self.load_config()
     
     def load_config(self):
@@ -40,7 +42,7 @@ class ConfigurationManager:
                 'db_type': 'postgresql',
                 'host': 'localhost',
                 'port': 5432,
-                'database_name': 'servicenow_docs',
+                'database_name': 'sn_docs',
                 'username': 'servicenow_user',
                 'password': '',
                 'connection_pool_size': 10,
@@ -92,7 +94,7 @@ class ConfigurationManager:
             'logging': {
                 'level': 'INFO',
                 'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                'file_path': 'logs/servicenow_docs.log',
+                'file_path': 'logs/sn_docs.log',
                 'max_file_size': 10485760,
                 'backup_count': 5,
                 'console_output': True
@@ -115,12 +117,42 @@ class ConfigurationManager:
         return ''.join(secrets.choice(alphabet) for _ in range(length))
     
     def save_config(self):
-        """Save configuration to files"""
+        """Save configuration to centralized database storage"""
+        try:
+            # Save database configuration to centralized storage
+            db_config = self.config.get('database', {})
+            if db_config:
+                self.centralized_config.save_database_configuration(db_config)
+            
+            # Save ServiceNow configuration to centralized storage
+            sn_config = self.config.get('servicenow', {})
+            if sn_config:
+                self.centralized_config.save_servicenow_configuration(sn_config)
+            
+            # Also save to files for backward compatibility (without sensitive data)
+            self.save_config_files()
+            
+            return True
+        except Exception as e:
+            st.error(f"Failed to save configuration: {e}")
+            return False
+    
+    def save_config_files(self):
+        """Save configuration to files (without sensitive data)"""
+        # Create a copy of config without sensitive data
+        safe_config = self.config.copy()
+        if 'database' in safe_config:
+            safe_config['database'] = safe_config['database'].copy()
+            safe_config['database']['password'] = ''  # Remove password from file
+        if 'servicenow' in safe_config:
+            safe_config['servicenow'] = safe_config['servicenow'].copy()
+            safe_config['servicenow']['password'] = ''  # Remove password from file
+        
         # Save YAML config
         with open(self.config_file, 'w') as f:
-            yaml.dump(self.config, f, default_flow_style=False)
+            yaml.dump(safe_config, f, default_flow_style=False)
         
-        # Save environment variables
+        # Save environment variables (without passwords)
         self.save_env_file()
     
     def save_env_file(self):
@@ -132,7 +164,7 @@ class ConfigurationManager:
         env_content.append(f"DB_TYPE={db_config.get('db_type', 'postgresql')}")
         env_content.append(f"DB_HOST={db_config.get('host', 'localhost')}")
         env_content.append(f"DB_PORT={db_config.get('port', 5432)}")
-        env_content.append(f"DB_NAME={db_config.get('database_name', 'servicenow_docs')}")
+        env_content.append(f"DB_NAME={db_config.get('database_name', 'sn_docs')}")
         env_content.append(f"DB_USER={db_config.get('username', 'servicenow_user')}")
         env_content.append(f"DB_PASSWORD={db_config.get('password', '')}")
         
@@ -152,134 +184,86 @@ class ConfigurationManager:
             f.write('\n'.join(env_content))
     
     def get_database_config(self) -> Dict[str, Any]:
-        """Get database configuration - prioritize current active connection, then fall back to saved configs"""
+        """Get database configuration from centralized configuration"""
         try:
-            # First, try to get the current active connection from DatabaseManager
-            from database import DatabaseManager
-            db_manager = DatabaseManager()
-            
-            # Parse the current database URL to get connection details
-            database_url = db_manager.database_url
-            
-            if database_url.startswith('postgresql://'):
-                # Parse PostgreSQL URL: postgresql://user:password@host:port/database
-                import re
-                pattern = r'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
-                match = re.match(pattern, database_url)
-                if match:
-                    username, password, host, port, database = match.groups()
-                    return {
-                        'host': host,
-                        'port': int(port),
-                        'database_name': database,
-                        'username': username,
-                        'db_type': 'postgresql',
-                        'password': password,
-                        '_source': 'current_connection'
-                    }
-            elif database_url.startswith('sqlite:///'):
-                # Parse SQLite URL: sqlite:///path/to/database
-                database_path = database_url.replace('sqlite:///', '')
-                return {
-                    'host': 'localhost',
-                    'port': 0,
-                    'database_name': database_path,
-                    'username': 'sqlite',
-                    'db_type': 'sqlite',
-                    'password': '',
-                    '_source': 'current_connection'
-                }
-            elif database_url.startswith('mysql'):
-                # Parse MySQL URL: mysql+pymysql://user:password@host:port/database
-                import re
-                pattern = r'mysql\+pymysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
-                match = re.match(pattern, database_url)
-                if match:
-                    username, password, host, port, database = match.groups()
-                    return {
-                        'host': host,
-                        'port': int(port),
-                        'database_name': database,
-                        'username': username,
-                        'db_type': 'mysql',
-                        'password': password,
-                        '_source': 'current_connection'
-                    }
-        except Exception as e:
-            # If parsing fails, fall back to saved configuration
-            pass
-        
-        # Fall back to saved database configuration
-        try:
-            from database import DatabaseManager
-            db_manager = DatabaseManager()
-            db_config = db_manager.get_database_configuration('default')
+            # Get configuration from centralized storage
+            db_config = self.centralized_config.get_database_configuration('default')
             if db_config:
-                config_dict = db_config.to_dict()
-                # Remove sensitive fields for display
-                config_dict.pop('password', None)
-                config_dict.pop('id', None)
-                config_dict.pop('created_at', None)
-                config_dict.pop('updated_at', None)
-                config_dict.pop('is_active', None)
-                config_dict['_source'] = 'saved_config'
-                return config_dict
+                db_config['_source'] = 'centralized_database'
+                return db_config
+            
+            # Fall back to environment variables
+            import os
+            env_config = {
+                'db_type': os.getenv('DB_TYPE', 'postgresql'),
+                'host': os.getenv('DB_HOST', 'localhost'),
+                'port': int(os.getenv('DB_PORT', '5432')),
+                'database_name': os.getenv('DB_NAME', 'sn_docs'),
+                'username': os.getenv('DB_USER', 'servicenow_user'),
+                'password': os.getenv('DB_PASSWORD', ''),
+                'connection_pool_size': int(os.getenv('DB_CONNECTION_POOL_SIZE', '10')),
+                'max_overflow': int(os.getenv('DB_MAX_OVERFLOW', '20')),
+                'echo': os.getenv('DB_ECHO', 'false').lower() == 'true',
+                '_source': 'environment'
+            }
+            return env_config
+            
         except Exception as e:
-            # Fall back to config file if database loading fails
-            pass
-        
-        # Fall back to config file
-        config = self.config.get('database', {})
-        config['_source'] = 'config_file'
-        return config
+            st.warning(f"⚠️ Could not load database configuration: {str(e)}")
+            
+            # Return default config if nothing found
+            return {
+                'db_type': 'postgresql',
+                'host': 'localhost',
+                'port': 5432,
+                'database_name': 'sn_docs',
+                'username': 'servicenow_user',
+                'password': '',
+                'connection_pool_size': 10,
+                'max_overflow': 20,
+                'echo': False,
+                '_source': 'default'
+            }
     
     def get_database_password(self) -> str:
-        """Get database password - prioritize current active connection, then fall back to saved configs"""
+        """Get database password from centralized configuration"""
         try:
-            # First, try to get the current active connection from DatabaseManager
-            from database import DatabaseManager
-            db_manager = DatabaseManager()
-            
-            # Parse the current database URL to get password
-            database_url = db_manager.database_url
-            
-            if database_url.startswith('postgresql://'):
-                # Parse PostgreSQL URL: postgresql://user:password@host:port/database
-                import re
-                pattern = r'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
-                match = re.match(pattern, database_url)
-                if match:
-                    username, password, host, port, database = match.groups()
-                    return password
-            elif database_url.startswith('mysql'):
-                # Parse MySQL URL: mysql+pymysql://user:password@host:port/database
-                import re
-                pattern = r'mysql\+pymysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
-                match = re.match(pattern, database_url)
-                if match:
-                    username, password, host, port, database = match.groups()
-                    return password
-        except Exception as e:
-            # If parsing fails, fall back to saved configuration
-            pass
-        
-        # Fall back to saved database configuration
-        try:
-            from database import DatabaseManager
-            db_manager = DatabaseManager()
-            db_config = db_manager.get_database_configuration('default')
+            # Get configuration from centralized storage
+            db_config = self.centralized_config.get_database_configuration('default')
             if db_config:
-                return db_config.password or ''
+                return db_config.get('password', '')
+            
+            # Fall back to environment variables
+            import os
+            return os.getenv('DB_PASSWORD', '')
+            
         except Exception as e:
-            # Fall back to config file if database loading fails
-            pass
-        
-        # Fall back to config file
-        return self.config.get('database', {}).get('password', '')
+            # Fall back to config file
+            return self.config.get('database', {}).get('password', '')
     
     def get_servicenow_config(self) -> Dict[str, Any]:
-        """Get ServiceNow configuration"""
-        return self.config.get('servicenow', {})
+        """Get ServiceNow configuration from centralized configuration"""
+        try:
+            # Get configuration from centralized storage
+            sn_config = self.centralized_config.get_servicenow_configuration('default')
+            if sn_config:
+                return sn_config
+            
+            # Fall back to environment variables
+            import os
+            return {
+                'instance_url': os.getenv('SN_INSTANCE_URL', ''),
+                'username': os.getenv('SN_USERNAME', ''),
+                'password': os.getenv('SN_PASSWORD', ''),
+                'api_version': os.getenv('SN_API_VERSION', 'v2'),
+                'timeout': int(os.getenv('SN_TIMEOUT', '30')),
+                'max_retries': int(os.getenv('SN_MAX_RETRIES', '3')),
+                'verify_ssl': os.getenv('SN_VERIFY_SSL', 'true').lower() == 'true'
+            }
+            
+        except Exception as e:
+            # Fall back to config file
+            return self.config.get('servicenow', {})
     
     def update_database_config(self, **kwargs):
         """Update database configuration"""
@@ -349,7 +333,7 @@ def show_database_config(config_manager: ConfigurationManager):
     # Show current startup configuration
     st.markdown("### 🚀 Current Startup Configuration")
     startup_config = config_manager.get_database_config()
-    st.info(f"**Current startup configuration:** {startup_config.get('host', 'localhost')}:{startup_config.get('port', 5432)}/{startup_config.get('database_name', 'servicenow_docs')} ({startup_config.get('username', 'servicenow_user')})")
+    st.info(f"**Current startup configuration:** {startup_config.get('host', 'localhost')}:{startup_config.get('port', 5432)}/{startup_config.get('database_name', 'sn_docs')} ({startup_config.get('username', 'servicenow_user')})")
     
     # Show saved configurations
     try:
@@ -387,7 +371,11 @@ def show_database_config(config_manager: ConfigurationManager):
                 selected_config_obj = next((config for config in saved_configs if config.name == selected_config), None)
                 if selected_config_obj:
                     st.info(f"Loading configuration: **{selected_config_obj.name}**")
-                    db_config = selected_config_obj.to_dict()
+                    # Handle both ORM objects and dictionaries
+                    if hasattr(selected_config_obj, 'to_dict'):
+                        db_config = selected_config_obj.to_dict()
+                    else:
+                        db_config = selected_config_obj.copy()
                     # Remove sensitive fields for display
                     db_config.pop('password', None)
                     db_config.pop('id', None)
@@ -490,7 +478,7 @@ def show_database_config(config_manager: ConfigurationManager):
     with col2:
         database_name = st.text_input(
             "Database Name",
-            value=db_config.get('database_name', 'servicenow_docs'),
+            value=db_config.get('database_name', 'sn_docs'),
             help="Name of the database to connect to"
         )
         
@@ -992,71 +980,73 @@ def show_servicenow_config(config_manager: ConfigurationManager):
             value=servicenow_config.get('verify_ssl', True)
         )
     
-    # Test connection button
-    if st.button("🔍 Test Connection", type="secondary"):
-        if instance_url and username and password:
-            # Validate instance URL format
-            if not instance_url.startswith(('http://', 'https://')):
-                st.error("❌ Instance URL must start with http:// or https://")
-            elif not any(domain in instance_url for domain in ['.service-now.com', '.servicenow.com', '.now.com']):
-                st.warning("⚠️ Instance URL should contain a valid ServiceNow domain (.service-now.com, .servicenow.com, or .now.com)")
-            
-            try:
-                from servicenow_api_client import ServiceNowAPIClient
-                client = ServiceNowAPIClient(instance_url, username, password)
-                # Test connection using the proper method
-                result = client.test_connection()
-                if result.get('success', False):
-                    st.success(f"✅ {result.get('message', 'Connection successful')}")
-                    if 'response_time' in result:
-                        st.info(f"Response time: {result['response_time']:.2f} seconds")
-                else:
-                    error_msg = result.get('message', 'Connection failed')
-                    st.error(f"❌ {error_msg}")
-                    
-                    # Provide specific troubleshooting based on error type
-                    if 'NameResolutionError' in error_msg or 'Failed to resolve' in error_msg:
-                        st.markdown("**🔍 Troubleshooting DNS Resolution:**")
-                        st.markdown("""
-                        - Check if the instance URL is correct
-                        - Verify the instance exists and is accessible
-                        - Try accessing the instance in your browser first
-                        - Common ServiceNow URL formats:
-                          - `https://yourcompany.service-now.com`
-                          - `https://yourcompany.servicenow.com`
-                          - `https://yourcompany.now.com`
-                        """)
-                    elif 'Authentication failed' in error_msg or 'Unauthorized' in error_msg:
-                        st.markdown("**🔐 Troubleshooting Authentication:**")
-                        st.markdown("""
-                        - Verify your username and password are correct
-                        - Check if your account is active
-                        - Ensure you have the necessary permissions
-                        - Try logging into the ServiceNow instance in your browser
-                        """)
-                    elif 'Connection error' in error_msg:
-                        st.markdown("**🌐 Troubleshooting Network:**")
-                        st.markdown("""
-                        - Check your internet connection
-                        - Verify firewall settings
-                        - Try accessing the instance from your browser
-                        - Contact your IT department if behind a corporate firewall
-                        """)
-            except Exception as e:
-                st.error(f"❌ Connection failed: {str(e)}")
-                st.markdown("**🔧 General Troubleshooting:**")
-                st.markdown("""
-                - Verify all fields are filled correctly
-                - Check your internet connection
-                - Try accessing the ServiceNow instance in your browser
-                - Contact your ServiceNow administrator if issues persist
-                """)
-        else:
-            st.warning("⚠️ Please fill in all required fields")
-    
-    # Save ServiceNow Configuration button
+    # Action buttons section
     st.markdown("---")
+    st.markdown("#### 🔧 Configuration Actions")
+    
     col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("🔍 Test Connection", type="secondary", use_container_width=True):
+            if instance_url and username and password:
+                # Validate instance URL format
+                if not instance_url.startswith(('http://', 'https://')):
+                    st.error("❌ Instance URL must start with http:// or https://")
+                elif not any(domain in instance_url for domain in ['.service-now.com', '.servicenow.com', '.now.com']):
+                    st.warning("⚠️ Instance URL should contain a valid ServiceNow domain (.service-now.com, .servicenow.com, or .now.com)")
+                
+                try:
+                    from servicenow_api_client import ServiceNowAPIClient
+                    client = ServiceNowAPIClient(instance_url, username, password)
+                    # Test connection using the proper method
+                    result = client.test_connection()
+                    if result.get('success', False):
+                        st.success(f"✅ {result.get('message', 'Connection successful')}")
+                        if 'response_time' in result:
+                            st.info(f"Response time: {result['response_time']:.2f} seconds")
+                    else:
+                        error_msg = result.get('message', 'Connection failed')
+                        st.error(f"❌ {error_msg}")
+                        
+                        # Provide specific troubleshooting based on error type
+                        if 'NameResolutionError' in error_msg or 'Failed to resolve' in error_msg:
+                            st.markdown("**🔍 Troubleshooting DNS Resolution:**")
+                            st.markdown("""
+                            - Check if the instance URL is correct
+                            - Verify the instance exists and is accessible
+                            - Try accessing the instance in your browser first
+                            - Common ServiceNow URL formats:
+                              - `https://yourcompany.service-now.com`
+                              - `https://yourcompany.servicenow.com`
+                              - `https://yourcompany.now.com`
+                            """)
+                        elif 'Authentication failed' in error_msg or 'Unauthorized' in error_msg:
+                            st.markdown("**🔐 Troubleshooting Authentication:**")
+                            st.markdown("""
+                            - Verify your username and password are correct
+                            - Check if your account is active
+                            - Ensure you have the necessary permissions
+                            - Try logging into the ServiceNow instance in your browser
+                            """)
+                        elif 'Connection error' in error_msg:
+                            st.markdown("**🌐 Troubleshooting Network:**")
+                            st.markdown("""
+                            - Check your internet connection
+                            - Verify firewall settings
+                            - Try accessing the instance from your browser
+                            - Contact your IT department if behind a corporate firewall
+                            """)
+                except Exception as e:
+                    st.error(f"❌ Connection failed: {str(e)}")
+                    st.markdown("**🔧 General Troubleshooting:**")
+                    st.markdown("""
+                    - Verify all fields are filled correctly
+                    - Check your internet connection
+                    - Try accessing the ServiceNow instance in your browser
+                    - Contact your ServiceNow administrator if issues persist
+                    """)
+            else:
+                st.warning("⚠️ Please fill in all required fields")
     
     with col2:
         if st.button("💾 Save ServiceNow Configuration", type="primary", use_container_width=True):
@@ -1094,6 +1084,10 @@ def show_servicenow_config(config_manager: ConfigurationManager):
                     
                 except Exception as e:
                     st.error(f"❌ Failed to save ServiceNow configuration: {str(e)}")
+    
+    with col3:
+        if st.button("🗑️ Clear Form", type="secondary", use_container_width=True):
+            st.rerun()
 
 def show_security_config(config_manager: ConfigurationManager):
     """Show security configuration UI"""
@@ -1296,7 +1290,7 @@ def show_general_config(config_manager: ConfigurationManager):
                 config_manager.config['logging'] = {
                     'level': log_level,
                     'format': logging_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
-                    'file_path': logging_config.get('file_path', 'logs/servicenow_docs.log'),
+                    'file_path': logging_config.get('file_path', 'logs/sn_docs.log'),
                     'max_file_size': max_file_size,
                     'backup_count': backup_count,
                     'console_output': console_output
@@ -1313,3 +1307,5 @@ def show_general_config(config_manager: ConfigurationManager):
 
 if __name__ == "__main__":
     show_configuration_ui()
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

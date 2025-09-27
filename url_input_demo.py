@@ -66,15 +66,7 @@ def main():
     ### 📋 Example URLs
     
     ```
-    https://www.servicenow.com/docs/bundle/zurich-it-operations-management/page/product/event-management/reference/r_InstalledWithEventManagement.html
-    https://www.servicenow.com/docs/bundle/rome-platform-security/page/administer/security/concept/c_UserRoles.html
-    https://www.servicenow.com/docs/bundle/rome-platform-administration/page/administer/security/concept/c_SystemProperties.html
-    ```
-    
-    ### 🎮 Try It Out
-    
-    Navigate to the main application and:
-    1. Go to "🕷️ Comprehensive Scraper"
+    https://your-instance.service-now.com"🕷️ Comprehensive Scraper"
     2. Select "Scrape from URLs" or "Both"
     3. Choose your preferred URL input method
     4. Configure your URLs

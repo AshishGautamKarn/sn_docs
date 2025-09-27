@@ -93,9 +93,9 @@ EOF
 # Setup PostgreSQL
 print_status "Setting up PostgreSQL database..."
 sudo -u postgres psql << 'EOF'
-CREATE DATABASE servicenow_docs;
+CREATE DATABASE sn_docs;
 CREATE USER servicenow_user WITH PASSWORD '${DB_PASSWORD}';
-GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;
+GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;
 \q
 EOF
 
@@ -104,7 +104,7 @@ print_status "Creating environment configuration..."
 cat > /opt/servicenow-docs/.env << 'EOF'
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=servicenow_user
 DB_PASSWORD=${DB_PASSWORD}
 SCRAPER_TIMEOUT=60
@@ -138,7 +138,7 @@ if systemctl is-active --quiet servicenow-app; then
     echo ""
     echo "📱 Application URL: http://localhost:8506"
     echo "🗄️  Database: PostgreSQL on localhost:5432"
-    echo "📊 Database Name: servicenow_docs"
+    echo "📊 Database Name: sn_docs"
     echo ""
     echo "📝 Useful Commands:"
     echo "  Check status: systemctl status servicenow-app"

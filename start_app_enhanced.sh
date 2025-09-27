@@ -60,7 +60,9 @@ command_exists() {
 detect_postgresql_services() {
     print_status "Detecting PostgreSQL services..."
     
-    local detected_services=""
+    local services=()
+    local ports=()
+    local versions=()
     
     # Check for PostgreSQL services on macOS
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -69,23 +71,29 @@ detect_postgresql_services() {
             local brew_services=$(brew services list | grep postgresql | grep started | awk '{print $1}' 2>/dev/null || true)
             if [ -n "$brew_services" ]; then
                 while IFS= read -r service; do
-                    if [ -n "$service" ]; then
-                        # Get version from service name
-                        local version=$(echo "$service" | grep -o '[0-9]\+' | head -1 || echo "Unknown")
-                        detected_services="${detected_services}${service}|5432|${version}\n"
-                    fi
+                    services+=("$service")
+                    # Get port for this service
+                    local port=$(brew services info "$service" 2>/dev/null | grep "Port:" | awk '{print $2}' || echo "5432")
+                    ports+=("$port")
+                    # Get version
+                    local version=$(echo "$service" | grep -o '[0-9]\+' | head -1 || echo "Unknown")
+                    versions+=("$version")
                 done <<< "$brew_services"
             fi
         fi
         
         # Check for PostgreSQL.app
         if [ -d "/Applications/PostgreSQL.app" ]; then
-            detected_services="${detected_services}PostgreSQL.app|5432|App\n"
+            services+=("PostgreSQL.app")
+            ports+=("5432")
+            versions+=("App")
         fi
         
         # Check for system PostgreSQL
         if pgrep -f "postgres.*-D" >/dev/null 2>&1; then
-            detected_services="${detected_services}System PostgreSQL|5432|System\n"
+            services+=("System PostgreSQL")
+            ports+=("5432")
+            versions+=("System")
         fi
     fi
     
@@ -96,32 +104,38 @@ detect_postgresql_services() {
             local systemd_services=$(systemctl list-units --type=service --state=running | grep postgresql | awk '{print $1}' 2>/dev/null || true)
             if [ -n "$systemd_services" ]; then
                 while IFS= read -r service; do
-                    if [ -n "$service" ]; then
-                        # Get port from service configuration
-                        local port=$(systemctl show "$service" --property=ExecStart 2>/dev/null | grep -o 'port=[0-9]\+' | cut -d= -f2 || echo "5432")
-                        # Get version
-                        local version=$(systemctl show "$service" --property=ExecStart 2>/dev/null | grep -o 'postgresql[0-9]\+' | grep -o '[0-9]\+' || echo "Unknown")
-                        detected_services="${detected_services}${service}|${port}|${version}\n"
-                    fi
+                    services+=("$service")
+                    # Get port from service configuration
+                    local port=$(systemctl show "$service" --property=ExecStart 2>/dev/null | grep -o 'port=[0-9]\+' | cut -d= -f2 || echo "5432")
+                    ports+=("$port")
+                    # Get version
+                    local version=$(systemctl show "$service" --property=ExecStart 2>/dev/null | grep -o 'postgresql[0-9]\+' | grep -o '[0-9]\+' || echo "Unknown")
+                    versions+=("$version")
                 done <<< "$systemd_services"
             fi
         fi
         
         # Check for running PostgreSQL processes
         if pgrep -f "postgres.*-D" >/dev/null 2>&1; then
-            detected_services="${detected_services}Running PostgreSQL Process|5432|Process\n"
+            services+=("Running PostgreSQL Process")
+            ports+=("5432")
+            versions+=("Process")
         fi
     fi
     
     # Return results
-    echo -e "$detected_services"
+    echo "${services[@]}"
+    echo "${ports[@]}"
+    echo "${versions[@]}"
 }
 
 # Function to detect running MySQL services
 detect_mysql_services() {
     print_status "Detecting MySQL services..."
     
-    local detected_services=""
+    local services=()
+    local ports=()
+    local versions=()
     
     # Check for MySQL services on macOS
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -130,16 +144,18 @@ detect_mysql_services() {
             local brew_services=$(brew services list | grep mysql | grep started | awk '{print $1}' 2>/dev/null || true)
             if [ -n "$brew_services" ]; then
                 while IFS= read -r service; do
-                    if [ -n "$service" ]; then
-                        detected_services="${detected_services}${service}|3306|Homebrew\n"
-                    fi
+                    services+=("$service")
+                    ports+=("3306")
+                    versions+=("Homebrew")
                 done <<< "$brew_services"
             fi
         fi
         
         # Check for MySQL.app
         if [ -d "/Applications/MySQL.app" ]; then
-            detected_services="${detected_services}MySQL.app|3306|App\n"
+            services+=("MySQL.app")
+            ports+=("3306")
+            versions+=("App")
         fi
     fi
     
@@ -150,16 +166,18 @@ detect_mysql_services() {
             local systemd_services=$(systemctl list-units --type=service --state=running | grep mysql | awk '{print $1}' 2>/dev/null || true)
             if [ -n "$systemd_services" ]; then
                 while IFS= read -r service; do
-                    if [ -n "$service" ]; then
-                        detected_services="${detected_services}${service}|3306|System\n"
-                    fi
+                    services+=("$service")
+                    ports+=("3306")
+                    versions+=("System")
                 done <<< "$systemd_services"
             fi
         fi
     fi
     
     # Return results
-    echo -e "$detected_services"
+    echo "${services[@]}"
+    echo "${ports[@]}"
+    echo "${versions[@]}"
 }
 
 # Function to check system requirements
@@ -202,39 +220,13 @@ configure_database() {
     echo ""
     
     # Detect existing services
-    local postgres_services=()
-    local postgres_ports=()
-    local postgres_versions=()
+    local postgres_services=($(detect_postgresql_services | head -1))
+    local postgres_ports=($(detect_postgresql_services | sed -n '2p'))
+    local postgres_versions=($(detect_postgresql_services | sed -n '3p'))
     
-    # Parse PostgreSQL services
-    local postgres_output=$(detect_postgresql_services)
-    if [ -n "$postgres_output" ]; then
-        while IFS= read -r line; do
-            if [ -n "$line" ]; then
-                IFS='|' read -r service port version <<< "$line"
-                postgres_services+=("$service")
-                postgres_ports+=("$port")
-                postgres_versions+=("$version")
-            fi
-        done <<< "$postgres_output"
-    fi
-    
-    local mysql_services=()
-    local mysql_ports=()
-    local mysql_versions=()
-    
-    # Parse MySQL services
-    local mysql_output=$(detect_mysql_services)
-    if [ -n "$mysql_output" ]; then
-        while IFS= read -r line; do
-            if [ -n "$line" ]; then
-                IFS='|' read -r service port version <<< "$line"
-                mysql_services+=("$service")
-                mysql_ports+=("$port")
-                mysql_versions+=("$version")
-            fi
-        done <<< "$mysql_output"
-    fi
+    local mysql_services=($(detect_mysql_services | head -1))
+    local mysql_ports=($(detect_mysql_services | sed -n '2p'))
+    local mysql_versions=($(detect_mysql_services | sed -n '3p'))
     
     # Display detected services
     if [ ${#postgres_services[@]} -gt 0 ]; then
@@ -603,11 +595,12 @@ start_application_ssl() {
     echo ""
     
     # Start Streamlit with SSL
-    PYTHONWARNINGS="ignore::urllib3.exceptions.NotOpenSSLWarning" streamlit run "$APP_FILE" \
+    streamlit run "$APP_FILE" \
         --server.port="$SSL_PORT" \
         --server.sslCertFile="$CERT_FILE" \
         --server.sslKeyFile="$KEY_FILE" \
         --server.headless=true \
+        --server.enableCORS=false \
         --server.enableXsrfProtection=true
 }
 
@@ -729,7 +722,7 @@ main() {
     # Start application
     if [ "$NO_SSL" = true ]; then
         print_step "Starting ServiceNow Advanced Visual Documentation..."
-        PYTHONWARNINGS="ignore::urllib3.exceptions.NotOpenSSLWarning" streamlit run "$APP_FILE" --server.port="$SSL_PORT" --server.headless=true
+        streamlit run "$APP_FILE" --server.port="$SSL_PORT" --server.headless=true
     else
         start_application_ssl
     fi

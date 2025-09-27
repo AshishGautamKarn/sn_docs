@@ -100,7 +100,7 @@ class ComprehensiveScraperUI:
             if url_input_method == "Manual Entry":
                 urls_text = st.text_area(
                     "Enter URLs (one per line):",
-                    placeholder="https://www.servicenow.com/docs/bundle/zurich-it-operations-management/page/product/event-management/reference/r_InstalledWithEventManagement.html",
+                    placeholder="https://your-instance.service-now.com",
                     height=150,
                     help="Enter ServiceNow documentation URLs to scrape"
                 )
@@ -108,26 +108,26 @@ class ComprehensiveScraperUI:
             else:  # Preset URLs
                 preset_options = {
                     "Event Management": [
-                        "https://www.servicenow.com/docs/bundle/zurich-it-operations-management/page/product/event-management/reference/r_InstalledWithEventManagement.html"
+                        "https://your-instance.service-now.com"
                     ],
                     "Security & Roles": [
-                        "https://www.servicenow.com/docs/bundle/rome-platform-security/page/administer/security/concept/c_UserRoles.html"
+                        "https://your-instance.service-now.com"
                     ],
                     "System Properties": [
-                        "https://www.servicenow.com/docs/bundle/rome-platform-administration/page/administer/security/concept/c_SystemProperties.html"
+                        "https://your-instance.service-now.com"
                     ],
                     "Service Management": [
-                        "https://www.servicenow.com/docs/bundle/zurich-service-management/page/product/service-management/reference/r_InstalledWithServiceManagement.html"
+                        "https://your-instance.service-now.com"
                     ],
                     "Asset Management": [
-                        "https://www.servicenow.com/docs/bundle/zurich-asset-management/page/product/asset-management/reference/r_InstalledWithAssetManagement.html"
+                        "https://your-instance.service-now.com"
                     ],
                     "All Presets": [
-                        "https://www.servicenow.com/docs/bundle/zurich-it-operations-management/page/product/event-management/reference/r_InstalledWithEventManagement.html",
-                        "https://www.servicenow.com/docs/bundle/rome-platform-security/page/administer/security/concept/c_UserRoles.html",
-                        "https://www.servicenow.com/docs/bundle/rome-platform-administration/page/administer/security/concept/c_SystemProperties.html",
-                        "https://www.servicenow.com/docs/bundle/zurich-service-management/page/product/service-management/reference/r_InstalledWithServiceManagement.html",
-                        "https://www.servicenow.com/docs/bundle/zurich-asset-management/page/product/asset-management/reference/r_InstalledWithAssetManagement.html"
+                        "https://your-instance.service-now.com",
+                        "https://your-instance.service-now.com",
+                        "https://your-instance.service-now.com",
+                        "https://your-instance.service-now.com",
+                        "https://your-instance.service-now.com"
                     ]
                 }
                 
@@ -582,3 +582,5 @@ class ComprehensiveScraperUI:
             <a href="https://www.linkedin.com/in/ashishgautamkarn/" target="_blank" style="color: #007bff; text-decoration: none;">LinkedIn Profile</a>
         </div>
         """, unsafe_allow_html=True)
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

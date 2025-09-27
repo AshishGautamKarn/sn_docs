@@ -58,7 +58,7 @@ Do you want to install PostgreSQL locally? (y/n) [y]: y
 
 PostgreSQL Host [localhost]: your-postgres-server.com
 PostgreSQL Port [5432]: 5432
-Database Name [servicenow_docs]: my_servicenow_db
+Database Name [sn_docs]: my_servicenow_db
 Username [servicenow_user]: my_user
 Password: [hidden input]
 
@@ -89,7 +89,7 @@ Password: [hidden input]
 ### **Option 2: Install PostgreSQL Locally**
 - ✅ **Automatic installation** based on OS
 - ✅ **Service management** (start/enable)
-- ✅ **Database setup** (servicenow_docs database)
+- ✅ **Database setup** (sn_docs database)
 - ✅ **User creation** (servicenow_user with password)
 
 ### **Option 3: Connect to Remote PostgreSQL**
@@ -113,7 +113,7 @@ The script automatically configures your `.env` file based on your database choi
 DB_TYPE=postgresql
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=servicenow_user
 DB_PASSWORD=YOUR_SECURE_PASSWORD
 ```
@@ -123,7 +123,7 @@ DB_PASSWORD=YOUR_SECURE_PASSWORD
 DB_TYPE=sqlite
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=servicenow_user
 DB_PASSWORD=YOUR_SECURE_PASSWORD
 ```
@@ -167,7 +167,7 @@ Do you want to use default connection settings? (y/n) [y]: y
 ### **Step 3: Database Creation**
 ```
 [STEP] Setting up PostgreSQL database...
-[INFO] Creating database 'servicenow_docs'...
+[INFO] Creating database 'sn_docs'...
 [SUCCESS] Database created successfully!
 ```
 
@@ -184,7 +184,7 @@ Do you want to use default connection settings? (y/n) [y]: y
 [SUCCESS] 🎉 ServiceNow Documentation App is starting!
 
 📱 Application URL: http://localhost:8506
-🗄️  Database: PostgreSQL (localhost:5432/servicenow_docs)
+🗄️  Database: PostgreSQL (localhost:5432/sn_docs)
 ```
 
 ## 🛡️ **Error Handling**
@@ -216,9 +216,9 @@ sudo apt-get update
 sudo apt-get install postgresql postgresql-contrib
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
-sudo -u postgres psql -c "CREATE DATABASE servicenow_docs;"
+sudo -u postgres psql -c "CREATE DATABASE sn_docs;"
 sudo -u postgres psql -c "CREATE USER servicenow_user WITH PASSWORD 'YOUR_SECURE_PASSWORD';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;"
 ```
 
 ### **CentOS/RHEL**
@@ -227,18 +227,18 @@ sudo yum install postgresql-server postgresql-contrib
 sudo postgresql-setup initdb
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
-sudo -u postgres psql -c "CREATE DATABASE servicenow_docs;"
+sudo -u postgres psql -c "CREATE DATABASE sn_docs;"
 sudo -u postgres psql -c "CREATE USER servicenow_user WITH PASSWORD 'YOUR_SECURE_PASSWORD';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;"
 ```
 
 ### **macOS**
 ```bash
 brew install postgresql
 brew services start postgresql
-createdb servicenow_docs
+createdb sn_docs
 psql -c "CREATE USER servicenow_user WITH PASSWORD 'YOUR_SECURE_PASSWORD';"
-psql -c "GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;"
+psql -c "GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;"
 ```
 
 ## 🎯 **Benefits**
@@ -270,7 +270,7 @@ psql -c "GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;"
 sudo systemctl status postgresql
 
 # Test connection
-psql -h localhost -U servicenow_user -d servicenow_docs
+psql -h localhost -U servicenow_user -d sn_docs
 
 # Check environment file
 cat .env | grep DB_

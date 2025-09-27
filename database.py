@@ -3,7 +3,7 @@ ServiceNow Database Models and Connectivity
 PostgreSQL database schema and ORM models for ServiceNow documentation data.
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON, Float
+from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON, Float, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -14,6 +14,7 @@ from typing import List, Dict, Optional, Any
 import logging
 import os
 from dotenv import load_dotenv
+from centralized_db_config import get_centralized_db_config
 
 # Load environment variables
 load_dotenv()
@@ -158,7 +159,7 @@ class DatabaseConfiguration(Base):
     db_type = Column(String(50), nullable=False, default='postgresql')
     host = Column(String(255), nullable=False, default='localhost')
     port = Column(Integer, nullable=False, default=5432)
-    database_name = Column(String(255), nullable=False, default='servicenow_docs')
+    database_name = Column(String(255), nullable=False, default='sn_docs')
     username = Column(String(255), nullable=False, default='servicenow_user')
     password = Column(String(500), nullable=False)  # Encrypted password
     connection_pool_size = Column(Integer, default=10)
@@ -241,56 +242,29 @@ class DatabaseManager:
     """Database manager for ServiceNow documentation"""
     
     def __init__(self, database_url: str = None):
-        self.database_url = database_url or self._get_database_url()
-        self.engine = create_engine(self.database_url, echo=False)
+        # Use centralized database configuration
+        self.centralized_config = get_centralized_db_config()
+        self.database_url = database_url or self.centralized_config.get_database_url()
+        self.engine = self.centralized_config.get_engine()
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.logger = self._setup_logger()
     
     def reload_configuration(self):
-        """Reload database configuration from environment variables and saved database configuration"""
+        """Reload database configuration using centralized configuration"""
         try:
-            # First try to load from saved database configuration
-            try:
-                db_config = self.get_database_configuration('default')
-                if db_config:
-                    # Build database URL from saved configuration
-                    if db_config.db_type == 'postgresql':
-                        new_database_url = f"postgresql://{db_config.username}:{db_config.password}@{db_config.host}:{db_config.port}/{db_config.database_name}"
-                    elif db_config.db_type == 'mysql':
-                        new_database_url = f"mysql+pymysql://{db_config.username}:{db_config.password}@{db_config.host}:{db_config.port}/{db_config.database_name}"
-                    elif db_config.db_type == 'sqlite':
-                        new_database_url = f"sqlite:///{db_config.database_name}"
-                    else:
-                        new_database_url = f"{db_config.db_type}://{db_config.username}:{db_config.password}@{db_config.host}:{db_config.port}/{db_config.database_name}"
-                    
-                    # Update engine if URL changed
-                    if new_database_url != self.database_url:
-                        self.database_url = new_database_url
-                        self.engine = create_engine(self.database_url, echo=db_config.echo)
-                        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-                        self.logger.info("Database configuration reloaded from saved configuration")
-                        return True
-                    else:
-                        self.logger.info("Database configuration unchanged")
-                        return False
-            except Exception as e:
-                self.logger.warning(f"Could not load from saved configuration: {e}")
+            # Reload centralized configuration
+            self.centralized_config._load_from_database()
             
-            # Fall back to environment variables
-            load_dotenv(override=True)
-            
-            # Get new database URL from environment
-            new_database_url = self._get_database_url()
-            
-            # Only recreate engine if URL changed
+            # Update local references
+            new_database_url = self.centralized_config.get_database_url()
             if new_database_url != self.database_url:
                 self.database_url = new_database_url
-                self.engine = create_engine(self.database_url, echo=False)
+                self.engine = self.centralized_config.get_engine()
                 self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-                self.logger.info("Database configuration reloaded from environment variables")
+                self.logger.debug("Database configuration reloaded from centralized configuration")
                 return True
             else:
-                self.logger.info("Database configuration unchanged")
+                self.logger.debug("Database configuration unchanged")
                 return False
         except Exception as e:
             self.logger.error(f"Failed to reload database configuration: {e}")
@@ -301,14 +275,14 @@ class DatabaseManager:
         db_type = os.getenv('DB_TYPE', 'postgresql')
         db_host = os.getenv('DB_HOST', 'localhost')
         db_port = os.getenv('DB_PORT', '5432')
-        db_name = os.getenv('DB_NAME', 'servicenow_docs')
+        db_name = os.getenv('DB_NAME', 'sn_docs')
         db_user = os.getenv('DB_USER', 'postgres')
         db_password = os.getenv('DB_PASSWORD', '')
         
         if db_type == 'postgresql':
-            return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+            return f"postgresql://user:password@host:port/database"
         elif db_type == 'mysql':
-            return f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+            return f"mysql+pymysql://user:password@host:port/database"
         else:
             raise ValueError(f"Unsupported database type: {db_type}")
     
@@ -920,6 +894,19 @@ class DatabaseManager:
         finally:
             session.close()
     
+    def test_connection(self) -> bool:
+        """Test database connection"""
+        try:
+            session = self.get_session()
+            try:
+                session.execute(text("SELECT 1"))
+                return True
+            finally:
+                session.close()
+        except Exception as e:
+            self.logger.error(f"Database connection test failed: {e}")
+            return False
+    
     def get_database_statistics(self) -> Dict[str, Any]:
         """Get comprehensive database statistics"""
         session = self.get_session()
@@ -953,10 +940,8 @@ class DatabaseManager:
             db_url = self.database_url
             
             # Extract connection details from URL
-            if db_url.startswith('postgresql://'):
-                # PostgreSQL URL format: postgresql://user:password@host:port/database
-                import re
-                pattern = r'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
+            if db_url.startswith('postgresql://user:password@host:port/database'):
+                # PostgreSQL URL format: postgresql://user:password@host:port/database'postgresql://user:password@host:port/database'
                 match = re.match(pattern, db_url)
                 if match:
                     username, password, host, port, database = match.groups()
@@ -990,10 +975,8 @@ class DatabaseManager:
                         'pool_timeout': getattr(self.engine.pool, 'timeout', 'Unknown'),
                         'statistics': stats
                     }
-            elif db_url.startswith('mysql://'):
-                # MySQL URL format: mysql://user:password@host:port/database
-                import re
-                pattern = r'mysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
+            elif db_url.startswith('mysql://user:password@host:port/database'):
+                # MySQL URL format: mysql://user:password@host:port/database'mysql://user:password@host:port/database'
                 match = re.match(pattern, db_url)
                 if match:
                     username, password, host, port, database = match.groups()
@@ -1067,51 +1050,21 @@ class DatabaseManager:
             }
 
     # ServiceNow Configuration Methods
-    def save_servicenow_configuration(self, config_data: Dict[str, Any]) -> ServiceNowConfiguration:
-        """Save ServiceNow configuration to database"""
-        session = self.get_session()
+    def save_servicenow_configuration(self, config_data: Dict[str, Any]) -> bool:
+        """Save ServiceNow configuration using centralized configuration"""
         try:
-            # Check if configuration with this name already exists
-            existing_config = session.query(ServiceNowConfiguration).filter_by(
-                name=config_data.get('name', 'default')
-            ).first()
-            
-            if existing_config:
-                # Update existing configuration
-                for key, value in config_data.items():
-                    if hasattr(existing_config, key) and key != 'id':
-                        setattr(existing_config, key, value)
-                existing_config.updated_at = datetime.utcnow()
-                session.commit()
-                self.logger.info(f"Updated ServiceNow configuration: {existing_config.name}")
-                return existing_config
-            else:
-                # Create new configuration
-                config = ServiceNowConfiguration(**config_data)
-                session.add(config)
-                session.commit()
-                self.logger.info(f"Created new ServiceNow configuration: {config.name}")
-                return config
+            return self.centralized_config.save_servicenow_configuration(config_data)
         except Exception as e:
-            session.rollback()
             self.logger.error(f"Failed to save ServiceNow configuration: {e}")
-            raise
-        finally:
-            session.close()
+            return False
     
-    def get_servicenow_configuration(self, name: str = 'default') -> Optional[ServiceNowConfiguration]:
-        """Get ServiceNow configuration from database"""
-        session = self.get_session()
+    def get_servicenow_configuration(self, name: str = 'default') -> Optional[Dict[str, Any]]:
+        """Get ServiceNow configuration using centralized configuration"""
         try:
-            config = session.query(ServiceNowConfiguration).filter_by(
-                name=name, is_active=True
-            ).first()
-            return config
+            return self.centralized_config.get_servicenow_configuration(name)
         except Exception as e:
             self.logger.error(f"Failed to get ServiceNow configuration: {e}")
             return None
-        finally:
-            session.close()
     
     def get_all_servicenow_configurations(self) -> List[ServiceNowConfiguration]:
         """Get all ServiceNow configurations from database"""
@@ -1144,51 +1097,21 @@ class DatabaseManager:
             session.close()
 
     # Database Configuration Methods
-    def save_database_configuration(self, config_data: Dict[str, Any]) -> DatabaseConfiguration:
-        """Save database configuration to database"""
-        session = self.get_session()
+    def save_database_configuration(self, config_data: Dict[str, Any]) -> bool:
+        """Save database configuration using centralized configuration"""
         try:
-            # Check if configuration with this name already exists
-            existing_config = session.query(DatabaseConfiguration).filter_by(
-                name=config_data.get('name', 'default')
-            ).first()
-            
-            if existing_config:
-                # Update existing configuration
-                for key, value in config_data.items():
-                    if hasattr(existing_config, key) and key != 'id':
-                        setattr(existing_config, key, value)
-                existing_config.updated_at = datetime.utcnow()
-                session.commit()
-                self.logger.info(f"Updated database configuration: {existing_config.name}")
-                return existing_config
-            else:
-                # Create new configuration
-                config = DatabaseConfiguration(**config_data)
-                session.add(config)
-                session.commit()
-                self.logger.info(f"Created new database configuration: {config.name}")
-                return config
+            return self.centralized_config.save_database_configuration(config_data)
         except Exception as e:
-            session.rollback()
             self.logger.error(f"Failed to save database configuration: {e}")
-            raise
-        finally:
-            session.close()
+            return False
     
-    def get_database_configuration(self, name: str = 'default') -> Optional[DatabaseConfiguration]:
-        """Get database configuration from database"""
-        session = self.get_session()
+    def get_database_configuration(self, name: str = 'default') -> Optional[Dict[str, Any]]:
+        """Get database configuration using centralized configuration"""
         try:
-            config = session.query(DatabaseConfiguration).filter_by(
-                name=name, is_active=True
-            ).first()
-            return config
+            return self.centralized_config.get_database_configuration(name)
         except Exception as e:
             self.logger.error(f"Failed to get database configuration: {e}")
             return None
-        finally:
-            session.close()
     
     def get_all_database_configurations(self) -> List[DatabaseConfiguration]:
         """Get all database configurations from database"""
@@ -1483,10 +1406,8 @@ class DatabaseIntrospector:
             db_url = self.database_url
             
             # Extract connection details from URL
-            if db_url.startswith('postgresql://'):
-                # PostgreSQL URL format: postgresql://user:password@host:port/database
-                import re
-                pattern = r'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
+            if db_url.startswith('postgresql://user:password@host:port/database'):
+                # PostgreSQL URL format: postgresql://user:password@host:port/database'postgresql://user:password@host:port/database'
                 match = re.match(pattern, db_url)
                 if match:
                     username, password, host, port, database = match.groups()
@@ -1520,10 +1441,8 @@ class DatabaseIntrospector:
                         'pool_timeout': getattr(self.engine.pool, 'timeout', 'Unknown'),
                         'statistics': stats
                     }
-            elif db_url.startswith('mysql://'):
-                # MySQL URL format: mysql://user:password@host:port/database
-                import re
-                pattern = r'mysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)'
+            elif db_url.startswith('mysql://user:password@host:port/database'):
+                # MySQL URL format: mysql://user:password@host:port/database'mysql://user:password@host:port/database'
                 match = re.match(pattern, db_url)
                 if match:
                     username, password, host, port, database = match.groups()
@@ -1612,3 +1531,5 @@ if __name__ == "__main__":
     # Test database connection
     stats = db.get_database_statistics()
     print(f"📊 Database statistics: {stats}")
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

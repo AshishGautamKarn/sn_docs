@@ -75,7 +75,7 @@ fix_permissions() {
     
     # Grant comprehensive permissions
     print_status "Granting database privileges..."
-    PGPASSWORD="$password" "$PSQL_CMD" -h "$host" -p "$port" -U postgres -d "$database" << EOF
+    PGPASSWORD="your_password" "$PSQL_CMD" -h "$host" -p "$port" -U postgres -d "$database" << EOF
 -- Grant schema privileges
 GRANT ALL PRIVILEGES ON SCHEMA public TO $username;
 
@@ -122,7 +122,7 @@ test_permissions() {
     PSQL_CMD=$(find_psql)
     
     # Test basic connection
-    if PGPASSWORD="$password" "$PSQL_CMD" -h "$host" -p "$port" -U "$username" -d "$database" -c "SELECT 1;" >/dev/null 2>&1; then
+    if PGPASSWORD="your_password" "$PSQL_CMD" -h "$host" -p "$port" -U "$username" -d "$database" -c "SELECT 1;" >/dev/null 2>&1; then
         print_success "Basic connection successful!"
     else
         print_error "Basic connection failed"
@@ -130,14 +130,14 @@ test_permissions() {
     fi
     
     # Test table access
-    if PGPASSWORD="$password" "$PSQL_CMD" -h "$host" -p "$port" -U "$username" -d "$database" -c "SELECT count(*) FROM servicenow_modules;" >/dev/null 2>&1; then
+    if PGPASSWORD="your_password" "$PSQL_CMD" -h "$host" -p "$port" -U "$username" -d "$database" -c "SELECT count(*) FROM servicenow_modules;" >/dev/null 2>&1; then
         print_success "Table access successful!"
     else
         print_warning "Table access failed - may need additional permissions"
     fi
     
     # Test table creation
-    if PGPASSWORD="$password" "$PSQL_CMD" -h "$host" -p "$port" -U "$username" -d "$database" -c "CREATE TABLE test_permissions (id SERIAL PRIMARY KEY); DROP TABLE test_permissions;" >/dev/null 2>&1; then
+    if PGPASSWORD="your_password" "$PSQL_CMD" -h "$host" -p "$port" -U "$username" -d "$database" -c "CREATE TABLE test_permissions (id SERIAL PRIMARY KEY); DROP TABLE test_permissions;" >/dev/null 2>&1; then
         print_success "Table creation/deletion successful!"
     else
         print_warning "Table creation failed - may need CREATE privileges"
@@ -151,7 +151,7 @@ provide_manual_instructions() {
     print_status "Manual fix instructions:"
     echo ""
     echo "1. Connect as postgres superuser:"
-    echo "   psql -h localhost -U postgres -d servicenow_docs"
+    echo "   psql -h localhost -U postgres -d sn_docs"
     echo ""
     echo "2. Grant permissions:"
     echo "   GRANT ALL PRIVILEGES ON SCHEMA public TO servicenow_user;"
@@ -160,7 +160,7 @@ provide_manual_instructions() {
     echo "   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO servicenow_user;"
     echo ""
     echo "3. Test connection:"
-    echo "   psql -h localhost -U servicenow_user -d servicenow_docs -c \"SELECT count(*) FROM servicenow_modules;\""
+    echo "   psql -h localhost -U servicenow_user -d sn_docs -c \"SELECT count(*) FROM servicenow_modules;\""
     echo ""
 }
 
@@ -175,8 +175,8 @@ main() {
     read -p "PostgreSQL Port [5432]: " PORT
     PORT=${PORT:-5432}
     
-    read -p "Database Name [servicenow_docs]: " DATABASE
-    DATABASE=${DATABASE:-servicenow_docs}
+    read -p "Database Name [sn_docs]: " DATABASE
+    DATABASE=${DATABASE:-sn_docs}
     
     read -p "Username [servicenow_user]: " USERNAME
     USERNAME=${USERNAME:-servicenow_user}

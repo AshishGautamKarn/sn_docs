@@ -383,7 +383,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Moderate",
             impact_level="Medium",
             affects_tables=["incident"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-incident-management/page/administer/incident-management/concept/c_IncidentPriority.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.incident.default_urgency",
@@ -391,7 +391,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Moderate",
             impact_level="Medium",
             affects_tables=["incident"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-incident-management/page/administer/incident-management/concept/c_IncidentUrgency.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.incident.default_impact",
@@ -399,7 +399,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Low",
             impact_level="Medium",
             affects_tables=["incident"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-incident-management/page/administer/incident-management/concept/c_IncidentImpact.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.incident.auto_close",
@@ -407,7 +407,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="false",
             impact_level="High",
             affects_tables=["incident"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-incident-management/page/administer/incident-management/concept/c_AutoCloseIncidents.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.incident.auto_resolve",
@@ -415,7 +415,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="false",
             impact_level="High",
             affects_tables=["incident"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-incident-management/page/administer/incident-management/concept/c_AutoResolveIncidents.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.problem.default_priority",
@@ -423,7 +423,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Moderate",
             impact_level="Medium",
             affects_tables=["problem"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-problem-management/page/administer/problem-management/concept/c_ProblemPriority.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.change.default_priority",
@@ -431,7 +431,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Moderate",
             impact_level="Medium",
             affects_tables=["change_request"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-change-management/page/administer/change-management/concept/c_ChangePriority.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.change.default_risk",
@@ -439,7 +439,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="Medium",
             impact_level="Medium",
             affects_tables=["change_request"],
-            documentation_url="https://docs.servicenow.com/bundle/itsm-change-management/page/administer/change-management/concept/c_ChangeRisk.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.sc_request.default_priority",
@@ -447,7 +447,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Moderate",
             impact_level="Medium",
             affects_tables=["sc_request"],
-            documentation_url="https://docs.servicenow.com/bundle/service-catalog/page/administer/service-catalog/concept/c_RequestPriority.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.case.default_priority",
@@ -455,7 +455,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Moderate",
             impact_level="Medium",
             affects_tables=["case"],
-            documentation_url="https://docs.servicenow.com/bundle/csm/page/administer/customer-service-management/concept/c_CasePriority.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.hr_case.default_priority",
@@ -463,7 +463,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="3 - Moderate",
             impact_level="Medium",
             affects_tables=["hr_case"],
-            documentation_url="https://docs.servicenow.com/bundle/hr-service-delivery/page/administer/hr-service-delivery/concept/c_HRCasePriority.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.user.default_password",
@@ -471,7 +471,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="changeme",
             impact_level="High",
             affects_tables=["sys_user"],
-            documentation_url="https://docs.servicenow.com/bundle/rome-platform-security/page/administer/security/concept/c_UserPasswordPolicy.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.user.password_policy",
@@ -479,7 +479,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="default",
             impact_level="High",
             affects_tables=["sys_user"],
-            documentation_url="https://docs.servicenow.com/bundle/rome-platform-security/page/administer/security/concept/c_UserPasswordPolicy.html"
+            documentation_url="https://your-instance.service-now.com"
         ),
         SystemParameter(
             name="glide.user.session_timeout",
@@ -487,7 +487,7 @@ def create_sample_data() -> ServiceNowDocumentation:
             default_value="30",
             impact_level="Medium",
             affects_tables=["sys_user"],
-            documentation_url="https://docs.servicenow.com/bundle/rome-platform-security/page/administer/security/concept/c_UserSessionTimeout.html"
+            documentation_url="https://your-instance.service-now.com"
         )
     ]
     

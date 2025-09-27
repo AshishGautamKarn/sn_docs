@@ -542,7 +542,7 @@ class ComprehensiveServiceNowScraper:
                     name=role_name,
                     description=f"Role for {module_name} module",
                     module=module_name,
-                    url=f"https://www.servicenow.com/docs/bundle/zurich-{module_name.lower().replace(' ', '-')}/page/product/{module_name.lower().replace(' ', '-')}/reference/roles.html",
+                    url=f"https://your-instance.service-now.com/page/product/{module_name.lower().replace(' ', '-')}/reference/roles.html",
                     item_type='role',
                     permissions=[],
                     dependencies=[],
@@ -556,7 +556,7 @@ class ComprehensiveServiceNowScraper:
                     name=table_name,
                     description=f"Table for {module_name} module",
                     module=module_name,
-                    url=f"https://www.servicenow.com/docs/bundle/zurich-{module_name.lower().replace(' ', '-')}/page/product/{module_name.lower().replace(' ', '-')}/reference/tables.html",
+                    url=f"https://your-instance.service-now.com/page/product/{module_name.lower().replace(' ', '-')}/reference/tables.html",
                     item_type='table',
                     fields=[],
                     relationships=[],
@@ -570,7 +570,7 @@ class ComprehensiveServiceNowScraper:
                     name=property_name,
                     description=f"System property for {module_name} module",
                     module=module_name,
-                    url=f"https://www.servicenow.com/docs/bundle/zurich-{module_name.lower().replace(' ', '-')}/page/product/{module_name.lower().replace(' ', '-')}/reference/properties.html",
+                    url=f"https://your-instance.service-now.com/page/product/{module_name.lower().replace(' ', '-')}/reference/properties.html",
                     item_type='property',
                     value="",
                     property_type="string",
@@ -585,7 +585,7 @@ class ComprehensiveServiceNowScraper:
                     name=job_name,
                     description=f"Scheduled job for {module_name} module",
                     module=module_name,
-                    url=f"https://www.servicenow.com/docs/bundle/zurich-{module_name.lower().replace(' ', '-')}/page/product/{module_name.lower().replace(' ', '-')}/reference/jobs.html",
+                    url=f"https://your-instance.service-now.com/page/product/{module_name.lower().replace(' ', '-')}/reference/jobs.html",
                     item_type='scheduled_job',
                     frequency="Daily",
                     script="",
@@ -675,3 +675,5 @@ if __name__ == "__main__":
     print(f"\n=== Items by Module ===")
     for module, items_list in by_module.items():
         print(f"{module}: {len(items_list)} items")
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

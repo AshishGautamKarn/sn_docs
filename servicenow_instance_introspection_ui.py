@@ -58,7 +58,8 @@ class ServiceNowInstanceIntrospectionUI:
             # Try to load from database first
             db_config = self.db_manager.get_servicenow_configuration('default')
             if db_config:
-                config_dict = db_config.to_dict()
+                # db_config is already a dictionary from centralized config
+                config_dict = db_config.copy()
                 config_dict['_source'] = 'database'
                 return config_dict
         except Exception as e:
@@ -637,3 +638,5 @@ class ServiceNowInstanceIntrospectionUI:
             <a href="https://www.linkedin.com/in/ashishgautamkarn/" target="_blank" style="color: #007bff; text-decoration: none;">LinkedIn Profile</a>
         </div>
         """, unsafe_allow_html=True)
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

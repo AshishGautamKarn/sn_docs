@@ -71,15 +71,7 @@ def main():
     ### 🔍 Configuration Parsing
     
     The system automatically parses database URLs to extract:
-    - **PostgreSQL**: `postgresql://user:password@host:port/database`
-    - **MySQL**: `mysql://user:password@host:port/database`
-    - **Security**: Passwords are masked for security
-    - **Error Handling**: Graceful fallback for unknown formats
-    
-    ### 🎮 How to Access
-    
-    1. **Navigate to**: http://localhost:8506
-    2. **Click**: "🗄️ Database" in the sidebar
+    - **PostgreSQL**: `postgresql://user:password@host:port/database"🗄️ Database" in the sidebar
     3. **View**: Database configuration details
     4. **Test**: Connection using the test button
     5. **Manage**: Database using action buttons

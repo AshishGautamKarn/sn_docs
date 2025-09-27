@@ -38,11 +38,11 @@ This package contains everything needed to deploy the ServiceNow Documentation A
 ### Option 1: Docker (Recommended)
 ```bash
 # Copy files to server
-scp -r servicenow_docs/ user@your-server:/home/user/
+scp -r sn_docs/ user@your-server:/home/user/
 
 # SSH to server
 ssh user@your-server
-cd servicenow_docs/
+cd sn_docs/
 
 # Deploy with Docker
 ./deploy.sh
@@ -51,11 +51,11 @@ cd servicenow_docs/
 ### Option 2: Manual Installation
 ```bash
 # Copy files to server
-scp -r servicenow_docs/ root@your-server:/tmp/
+scp -r sn_docs/ root@your-server:/tmp/
 
 # SSH to server as root
 ssh root@your-server
-cd /tmp/servicenow_docs/
+cd /tmp/sn_docs/
 
 # Install manually
 ./install.sh

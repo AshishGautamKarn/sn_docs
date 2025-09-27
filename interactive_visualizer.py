@@ -136,16 +136,16 @@ class InteractiveServiceNowVisualizer:
         # Get component data
         if component_type == "Roles":
             components = module_info['roles']
-            component_key = 'roles'
+            component_key="example_key"
         elif component_type == "Tables":
             components = module_info['tables']
-            component_key = 'tables'
+            component_key="example_key"
         elif component_type == "Properties":
             components = module_info['properties']
-            component_key = 'properties'
+            component_key="example_key"
         else:  # Scheduled Jobs
             components = module_info['jobs']
-            component_key = 'jobs'
+            component_key="example_key"
         
         if not components:
             st.info(f"No {component_type.lower()} found in {selected_module} module.")
@@ -686,3 +686,5 @@ class InteractiveServiceNowVisualizer:
             <a href="https://www.linkedin.com/in/ashishgautamkarn/" target="_blank" style="color: #007bff; text-decoration: none;">LinkedIn Profile</a>
         </div>
         """, unsafe_allow_html=True)
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

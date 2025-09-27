@@ -9,6 +9,7 @@ import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import time
+from centralized_db_config import get_centralized_db_config
 
 
 class ServiceNowAPIClient:
@@ -25,6 +26,24 @@ class ServiceNowAPIClient:
             'Accept': 'application/json'
         })
         self.logger = self._setup_logger()
+    
+    @classmethod
+    def from_centralized_config(cls, config_name: str = 'default'):
+        """Create ServiceNowAPIClient from centralized configuration"""
+        try:
+            centralized_config = get_centralized_db_config()
+            sn_config = centralized_config.get_servicenow_configuration(config_name)
+            
+            if not sn_config:
+                raise ValueError(f"No ServiceNow configuration found for '{config_name}'")
+            
+            return cls(
+                instance_url=sn_config['instance_url'],
+                username=sn_config['username'],
+                password=sn_config['password']
+            )
+        except Exception as e:
+            raise ValueError(f"Failed to create ServiceNowAPIClient from centralized config: {e}")
         
     def _setup_logger(self) -> logging.Logger:
         """Setup logging for ServiceNow API client"""
@@ -436,3 +455,5 @@ class ServiceNowAPIClient:
         except Exception as e:
             self.logger.error(f"Error getting fields for table {table_name}: {e}")
             return []
+
+# Created By: Ashish Gautam; LinkedIn: https://www.linkedin.com/in/ashishgautamkarn/

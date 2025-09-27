@@ -21,7 +21,7 @@ database:
 logging:
   backup_count: 5
   console_output: true
-  file_path: logs/servicenow_docs.log
+  file_path: logs/sn_docs.log
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
   level: INFO
   max_file_size: 10485760

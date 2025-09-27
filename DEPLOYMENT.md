@@ -52,13 +52,13 @@
 2. **Deploy the application:**
    ```bash
    # Copy application files to server
-   scp -r servicenow_docs/ user@your-server:/home/user/
+   scp -r sn_docs/ user@your-server:/home/user/
    
    # SSH to server
    ssh user@your-server
    
    # Navigate to application directory
-   cd servicenow_docs/
+   cd sn_docs/
    
    # Configure environment
    cp env.template .env
@@ -85,7 +85,7 @@ docker run -d \
   -e DB_HOST=your-postgres-host \
   -e DB_USER=your-db-user \
   -e DB_PASSWORD=your-db-password \
-  -e DB_NAME=servicenow_docs \
+  -e DB_NAME=sn_docs \
   servicenow-docs
 ```
 
@@ -102,9 +102,9 @@ docker run -d \
 2. **Setup PostgreSQL:**
    ```bash
    sudo -u postgres psql
-   CREATE DATABASE servicenow_docs;
+   CREATE DATABASE sn_docs;
    CREATE USER servicenow_user WITH PASSWORD 'YOUR_SECURE_PASSWORD';
-   GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;
+   GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;
    \q
    ```
 
@@ -208,7 +208,7 @@ Edit `.env` file with your configuration:
 # Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=servicenow_user
 DB_PASSWORD=your-secure-password
 
@@ -228,16 +228,16 @@ STREAMLIT_SERVER_ADDRESS=0.0.0.0
 1. **Install PostgreSQL on separate server**
 2. **Create database and user:**
    ```sql
-   CREATE DATABASE servicenow_docs;
+   CREATE DATABASE sn_docs;
    CREATE USER servicenow_user WITH PASSWORD 'secure_password';
-   GRANT ALL PRIVILEGES ON DATABASE servicenow_docs TO servicenow_user;
+   GRANT ALL PRIVILEGES ON DATABASE sn_docs TO servicenow_user;
    ```
 
 3. **Update .env file:**
    ```bash
    DB_HOST=your-postgres-server-ip
    DB_PORT=5432
-   DB_NAME=servicenow_docs
+   DB_NAME=sn_docs
    DB_USER=servicenow_user
    DB_PASSWORD=secure_password
    ```
@@ -248,7 +248,7 @@ STREAMLIT_SERVER_ADDRESS=0.0.0.0
 ```bash
 DB_HOST=your-rds-endpoint.region.rds.amazonaws.com
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=your-rds-username
 DB_PASSWORD=your-rds-password
 ```
@@ -257,7 +257,7 @@ DB_PASSWORD=your-rds-password
 ```bash
 DB_HOST=your-cloud-sql-ip
 DB_PORT=5432
-DB_NAME=servicenow_docs
+DB_NAME=sn_docs
 DB_USER=your-cloud-sql-user
 DB_PASSWORD=your-cloud-sql-password
 ```
@@ -338,7 +338,7 @@ tail -f logs/app.log
 
 ```bash
 # Database backup
-pg_dump -h localhost -U servicenow_user servicenow_docs > backup.sql
+pg_dump -h localhost -U servicenow_user sn_docs > backup.sql
 
 # Application backup
 tar -czf servicenow-app-backup.tar.gz /opt/servicenow-docs/

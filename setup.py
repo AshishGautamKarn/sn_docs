@@ -99,7 +99,7 @@ class ServiceNowSetup:
         # Create database
         try:
             subprocess.run([
-                "createdb", "servicenow_docs"
+                "createdb", "sn_docs"
             ], check=True)
             self.logger.info("✅ PostgreSQL database created")
             return True
@@ -125,7 +125,7 @@ class ServiceNowSetup:
         # Create database
         try:
             subprocess.run([
-                "mysql", "-e", "CREATE DATABASE IF NOT EXISTS servicenow_docs;"
+                "mysql", "-e", "CREATE DATABASE IF NOT EXISTS sn_docs;"
             ], check=True)
             self.logger.info("✅ MySQL database created")
             return True
