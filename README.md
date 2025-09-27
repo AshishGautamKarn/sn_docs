@@ -142,8 +142,8 @@
 
 ### **1. Clone Repository**
 ```bash
-git clone [https://github.com/yourusername/servicenow-docs.git](https://github.com/AshishGautamKarn/sn_docs/)
-cd sn-docs
+git clone https://github.com/AshishGautamKarn/sn_docs/
+cd sn_docs
 ```
 
 ### **2. Automated Setup**
@@ -210,7 +210,7 @@ streamlit run enhanced_app.py
 ```bash
 # Clone repository
 git clone https://github.com/AshishGautamKarn/sn_docs/
-cd sn-docs
+cd sn_docs
 
 # Create environment file
 cp .env.example .env
@@ -223,10 +223,10 @@ docker-compose up -d
 #### **Using Docker**
 ```bash
 # Build image
-docker build -t sn-docs .
+docker build -t sn_docs .
 
 # Run container
-docker run -p 8501:8501 --env-file .env sn-docs
+docker run -p 8501:8501 --env-file .env sn_docs
 ```
 
 ### **Option 3: SSL/HTTPS Installation**
@@ -459,8 +459,8 @@ class ServiceNowRole:
 #### **Local Development**
 ```bash
 # Clone repository
-git clone [https://github.com/yourusername/servicenow-docs.git](https://github.com/AshishGautamKarn/sn_docs/)
-cd sn-docs
+git clone https://github.com/AshishGautamKarn/sn_docs/
+cd sn_docs
 
 # Create development environment
 python -m venv venv
@@ -668,7 +668,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### **About the Creator**
 - **Name**: Ashish Gautam
 - **LinkedIn**: [https://www.linkedin.com/in/ashishgautamkarn/](https://www.linkedin.com/in/ashishgautamkarn/)
-- **Expertise**: ServiceNow, Python, Data Analytics, Database Engineering and Administration
+- **Expertise**: Database Engineering and Administration, Postgres, Mysql, Mongo, MS-SQL Server, Oracle, Full-Stack development, AI, Python ...
 - **Location**: Available for remote work and consulting
 
 ### **Contact Information**
@@ -682,6 +682,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
 
 **⭐ If you found this project helpful, please give it a star! ⭐**
+
 
 [![GitHub stars](https://img.shields.io/github/stars/ashishgautamkarn/servicenow-docs?style=social)](https://github.com/ashishgautamkarn/servicenow-docs)
 [![GitHub forks](https://img.shields.io/github/forks/ashishgautamkarn/servicenow-docs?style=social)](https://github.com/ashishgautamkarn/servicenow-docs)
